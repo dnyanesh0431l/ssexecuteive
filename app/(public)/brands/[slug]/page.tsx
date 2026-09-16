@@ -1,8 +1,5 @@
 "use client";
 
-import Link from "next/link";
-import { useParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
 import {
   ArrowLeft,
   ArrowUpRight,
@@ -11,11 +8,17 @@ import {
   Ruler,
   Shirt,
 } from "lucide-react";
-import { Header } from "../../../components/site/Header";
+import Link from "next/link";
+import { useParams } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
 import { Footer } from "../../../components/site/Footer";
+import { Header } from "../../../components/site/Header";
 import { EmptyState } from "../../../components/ui/EmptyState";
 import { Skeleton } from "../../../components/ui/Skeleton";
-import { subscribeToBrands, subscribeToColors } from "../../../lib/firebase/brands";
+import {
+  subscribeToBrands,
+  subscribeToColors,
+} from "../../../lib/firebase/brands";
 import type { Brand, BrandColor } from "../../../lib/types";
 import { cn, formatDate } from "../../../lib/utils";
 
@@ -56,7 +59,7 @@ export default function BrandDetailPage() {
       () => {
         setNotFound(true);
         setLoading(false);
-      }
+      },
     );
     return () => unsub();
   }, [slug]);
@@ -74,7 +77,7 @@ export default function BrandDetailPage() {
         setActiveColor((prev) => prev ?? data[0]?.id ?? null);
         setColorsLoading(false);
       },
-      () => setColorsLoading(false)
+      () => setColorsLoading(false),
     );
     return () => unsub();
   }, [brand?.id]);
@@ -100,6 +103,10 @@ export default function BrandDetailPage() {
         @keyframes ringPop {
           0% { transform: scale(.9); opacity:.7; }
           100% { transform: scale(1.5); opacity:0; }
+        }
+        @keyframes fadeUp {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: none; }
         }
       `}</style>
 
@@ -147,7 +154,7 @@ export default function BrandDetailPage() {
           {/* MAIN SPLIT */}
           <section className="mx-auto max-w-[1400px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
             <div className="grid gap-6 lg:grid-cols-12 lg:gap-8">
-              {/* LEFT — image + swatches + primary CTA */}
+              {/* LEFT — image + swatches + CTA */}
               <div className="lg:col-span-5">
                 <div className="relative overflow-hidden rounded-lg border border-[#E5E5E5] bg-[#F6F6F6]">
                   {activeImage ? (
@@ -165,7 +172,6 @@ export default function BrandDetailPage() {
                     </div>
                   )}
 
-                  {/* Floating active colour badge */}
                   {active ? (
                     <div className="absolute left-3 top-3 inline-flex items-center gap-2 rounded-full border border-[#E5E5E5] bg-white/95 px-3 py-1 text-[11px] font-medium text-black backdrop-blur">
                       <span
@@ -177,7 +183,7 @@ export default function BrandDetailPage() {
                   ) : null}
                 </div>
 
-                {/* Swatch strip */}
+                {/* Swatch strip — SELECT HERE ONLY */}
                 {colors.length > 0 ? (
                   <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
                     {colors.map((c) => {
@@ -193,8 +199,8 @@ export default function BrandDetailPage() {
                           className={cn(
                             "relative flex h-8 w-8 items-center justify-center overflow-hidden rounded-md border transition-all",
                             isActive
-                              ? "border-black ring-1 ring-black/10 scale-105"
-                              : "border-[#E5E5E5] hover:border-black/40"
+                              ? "scale-105 border-black ring-1 ring-black/10"
+                              : "border-[#E5E5E5] hover:border-black/40",
                           )}
                           style={{ backgroundColor: c.code }}
                         >
@@ -282,7 +288,7 @@ export default function BrandDetailPage() {
                   </div>
                 </dl>
 
-                {/* Colourways */}
+                {/* Colourways — PILLS (select) + ACTIVE DETAIL */}
                 <div className="mt-5">
                   <div className="flex items-center justify-between">
                     <h2 className="text-[13px] font-semibold tracking-tight text-black">
@@ -305,6 +311,7 @@ export default function BrandDetailPage() {
                     </p>
                   ) : (
                     <>
+                      {/* Pills — the ONLY selector besides the swatch strip */}
                       <div className="mt-3 -mx-4 flex gap-1.5 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0">
                         {colors.map((c) => {
                           const isActive = c.id === activeColor;
@@ -318,7 +325,7 @@ export default function BrandDetailPage() {
                                 "inline-flex h-8 shrink-0 items-center gap-2 rounded-full border px-2.5 pr-3 text-[12px] font-medium transition-colors",
                                 isActive
                                   ? "border-black bg-black text-white"
-                                  : "border-[#E5E5E5] bg-white text-black/70 hover:bg-[#F6F6F6] hover:text-black"
+                                  : "border-[#E5E5E5] bg-white text-black/70 hover:bg-[#F6F6F6] hover:text-black",
                               )}
                             >
                               <span
@@ -331,50 +338,61 @@ export default function BrandDetailPage() {
                         })}
                       </div>
 
+                      {/* Active colour detail — STACKED on mobile, inline on desktop */}
                       {active ? (
-                        <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 rounded-lg border border-[#E5E5E5] bg-white px-4 py-3">
-                          <div className="flex items-center gap-2">
+                        <div className="mt-3 overflow-hidden rounded-lg border border-[#E5E5E5] bg-white">
+                          {/* Header row — colour swatch + name + hex */}
+                          <div className="flex items-center gap-2 border-b border-[#E5E5E5] bg-[#F6F6F6] px-3.5 py-2.5">
                             <span
-                              className="h-5 w-5 rounded-full border border-black/10"
+                              className="h-5 w-5 shrink-0 rounded-full border border-black/10"
                               style={{ backgroundColor: active.code }}
                             />
                             <span className="text-[13px] font-semibold text-black">
                               {active.name}
                             </span>
-                            <span className="font-mono text-[11px] text-black/40">
+                            <span className="ml-auto font-mono text-[11px] text-black/40">
                               {active.code}
                             </span>
                           </div>
 
-                          <div className="flex min-w-0 flex-1 items-center gap-2">
-                            <Ruler className="h-3.5 w-3.5 shrink-0 text-black/35" />
+                          {/* Body — sizes */}
+                          <div className="px-3.5 py-3">
+                            <div className="flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-[0.14em] text-black/40">
+                              <Ruler className="h-3 w-3" />
+                              Available sizes
+                            </div>
+
                             {active.availableSizes.length > 0 ? (
-                              <div className="flex flex-wrap gap-1">
+                              <div className="mt-2 flex flex-wrap gap-1.5">
                                 {active.availableSizes.map((s) => (
                                   <span
                                     key={s}
-                                    className="inline-flex h-6 min-w-[30px] items-center justify-center rounded border border-[#E5E5E5] bg-[#F6F6F6] px-1.5 text-[11px] font-medium text-black"
+                                    className="inline-flex h-7 min-w-[34px] items-center justify-center rounded border border-[#E5E5E5] bg-white px-2 text-[12px] font-medium text-black"
                                   >
                                     {s}
                                   </span>
                                 ))}
                               </div>
                             ) : (
-                              <span className="text-[12px] text-black/45">
+                              <p className="mt-2 text-[12px] text-black/45">
                                 Sizes on request
-                              </span>
+                              </p>
                             )}
                           </div>
 
-                          <a
-                            href={buildWhatsAppLink(brand.name, active.name)}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="ml-auto inline-flex h-8 items-center gap-1.5 rounded-md bg-[#1845D6] px-3 text-[12px] font-medium text-white transition-colors hover:bg-[#1438B3]"
-                          >
-                            <MessageCircle className="h-3.5 w-3.5" />
-                            Enquire
-                          </a>
+                          {/* Footer — enquire button, full width on mobile */}
+                          <div className="border-t border-[#E5E5E5] bg-[#FAFAFA] px-3.5 py-2.5">
+                            <a
+                              href={buildWhatsAppLink(brand.name, active.name)}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-md bg-[#1845D6] px-4 text-[12px] font-medium text-white transition-colors hover:bg-[#1438B3] sm:w-auto"
+                            >
+                              <MessageCircle className="h-3.5 w-3.5" />
+                              Enquire about {active.name}
+                              <ArrowUpRight className="h-3 w-3" />
+                            </a>
+                          </div>
                         </div>
                       ) : null}
                     </>
@@ -383,6 +401,76 @@ export default function BrandDetailPage() {
               </div>
             </div>
           </section>
+
+          {/* ================= COLOUR GALLERY GRID — DISPLAY ONLY ================= */}
+          {colors.length > 0 ? (
+            <section className="border-t border-[#E5E5E5] bg-[#F6F6F6]">
+              <div className="mx-auto max-w-[1400px] px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
+                <div className="flex flex-wrap items-end justify-between gap-3">
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#B80A0B]">
+                      Gallery
+                    </p>
+                    <h2 className="mt-1.5 text-2xl font-semibold tracking-tight text-black sm:text-3xl">
+                      {brand.name} in every colour
+                    </h2>
+                  </div>
+                  <span className="text-[12px] text-black/45">
+                    {colors.length} variant{colors.length === 1 ? "" : "s"}
+                  </span>
+                </div>
+
+                {/* Grid: 2 cols mobile, 3 tablet, 4 desktop, 6 on xl */}
+                <ul className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
+                  {colors.map((c, i) => (
+                    <li
+                      key={c.id}
+                      style={{
+                        animation: `fadeUp .5s cubic-bezier(.16,1,.3,1) ${Math.min(i, 10) * 40}ms both`,
+                      }}
+                    >
+                      <div className="overflow-hidden rounded-lg border border-[#E5E5E5] bg-white">
+                        <div className="relative aspect-[4/5] overflow-hidden bg-[#F6F6F6]">
+                          {c.image ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={c.image}
+                              alt={`${brand.name} — ${c.name}`}
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            <div
+                              className="flex h-full w-full items-center justify-center"
+                              style={{ backgroundColor: c.code }}
+                            >
+                              <span className="text-[10px] font-medium uppercase tracking-[0.14em] text-white/80">
+                                {c.name}
+                              </span>
+                            </div>
+                          )}
+
+                          {/* Colour dot bottom-right */}
+                          <span
+                            className="absolute bottom-2 right-2 h-4 w-4 rounded-full border border-white/60 shadow-sm"
+                            style={{ backgroundColor: c.code }}
+                          />
+                        </div>
+
+                        <div className="px-2.5 py-2">
+                          <p className="truncate text-[12px] font-semibold text-black">
+                            {c.name}
+                          </p>
+                          <p className="mt-0.5 truncate font-mono text-[10px] text-black/40">
+                            {c.code}
+                          </p>
+                        </div>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </section>
+          ) : null}
 
           {/* Slim CTA strip */}
           <section className="border-t border-[#E5E5E5] bg-black">
@@ -405,22 +493,6 @@ export default function BrandDetailPage() {
               </a>
             </div>
           </section>
-
-          {/* Floating WhatsApp button — mobile only */}
-          <a
-            href={waLink}
-            target="_blank"
-            rel="noreferrer"
-            aria-label="Enquire on WhatsApp"
-            className="fixed bottom-5 right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-[#25D366] text-white shadow-[0_8px_28px_-8px_rgba(37,211,102,0.6)] transition-transform hover:scale-105 lg:hidden"
-          >
-            <span
-              className="absolute inset-0 rounded-full bg-[#25D366]"
-              style={{ animation: "ringPop 2s ease-out infinite" }}
-              aria-hidden
-            />
-            <MessageCircle className="relative h-6 w-6" />
-          </a>
         </>
       )}
 
@@ -431,25 +503,39 @@ export default function BrandDetailPage() {
 
 function BrandSkeleton() {
   return (
-    <div className="mx-auto grid max-w-[1400px] gap-6 px-4 py-6 sm:px-6 lg:grid-cols-12 lg:gap-8 lg:px-8 lg:py-8">
-      <div className="lg:col-span-5">
-        <Skeleton className="h-[300px] w-full rounded-lg sm:h-[360px] lg:h-[420px]" />
-        <div className="mt-2.5 flex gap-1.5">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <Skeleton key={i} className="h-8 w-8 rounded-md" />
-          ))}
+    <>
+      <div className="mx-auto grid max-w-[1400px] gap-6 px-4 py-6 sm:px-6 lg:grid-cols-12 lg:gap-8 lg:px-8 lg:py-8">
+        <div className="lg:col-span-5">
+          <Skeleton className="h-[300px] w-full rounded-lg sm:h-[360px] lg:h-[420px]" />
+          <div className="mt-2.5 flex gap-1.5">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Skeleton key={i} className="h-8 w-8 rounded-md" />
+            ))}
+          </div>
+          <Skeleton className="mt-3 h-11 w-full rounded-md" />
         </div>
-        <Skeleton className="mt-3 h-11 w-full rounded-md" />
+        <div className="space-y-4 lg:col-span-7">
+          <Skeleton className="h-3 w-24" />
+          <Skeleton className="h-12 w-3/4" />
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-5/6" />
+          <Skeleton className="h-16 w-full rounded-lg" />
+          <Skeleton className="h-8 w-full rounded-full" />
+          <Skeleton className="h-32 w-full rounded-lg" />
+        </div>
       </div>
-      <div className="space-y-4 lg:col-span-7">
-        <Skeleton className="h-3 w-24" />
-        <Skeleton className="h-12 w-3/4" />
-        <Skeleton className="h-4 w-full" />
-        <Skeleton className="h-4 w-5/6" />
-        <Skeleton className="h-16 w-full rounded-lg" />
-        <Skeleton className="h-8 w-full rounded-full" />
-        <Skeleton className="h-14 w-full rounded-lg" />
+
+      <div className="border-t border-[#E5E5E5] bg-[#F6F6F6]">
+        <div className="mx-auto max-w-[1400px] px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
+          <Skeleton className="h-3 w-32" />
+          <Skeleton className="mt-2 h-8 w-64" />
+          <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <Skeleton key={i} className="aspect-[4/5] w-full rounded-lg" />
+            ))}
+          </div>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
