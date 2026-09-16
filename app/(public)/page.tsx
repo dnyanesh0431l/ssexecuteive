@@ -1,7 +1,6 @@
 "use client";
 
-import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import {
   ArrowRight,
   ArrowUpRight,
@@ -9,6 +8,7 @@ import {
   Factory,
   Layers,
   Mail,
+  MessageCircle,
   Palette,
   Ruler,
   Scissors,
@@ -16,22 +16,51 @@ import {
   Sparkles,
   Truck,
 } from "lucide-react";
-import { Header } from "../components/site/Header";
+import Link from "next/link";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Footer } from "../components/site/Footer";
+import { Header } from "../components/site/Header";
 import { EmptyState } from "../components/ui/EmptyState";
 import { Skeleton } from "../components/ui/Skeleton";
+import { db } from "../lib/firebase/config";
 import { useBrands, useGallery } from "../lib/hooks/useCollectionData";
 import { isValidEmail, truncate } from "../lib/utils";
-import { addDoc, collection, serverTimestamp } from "firebase/firestore";
-import { db } from "../lib/firebase/config";
+
+const WHATSAPP_NUMBER = "918087776060";
+const HERO_BG =
+  "https://i.pinimg.com/1200x/d7/60/6e/d7606ec1b41b5ae00d23e7191d21d2ec.jpg";
 
 const CAPABILITIES = [
-  { icon: Scissors, title: "Cut & Sew", description: "In-house cutting and stitching with tight tolerance control." },
-  { icon: Ruler, title: "Sampling & Fit", description: "Rapid prototyping and graded size sets before bulk runs." },
-  { icon: Layers, title: "Private Label", description: "Woven labels, tags and packaging built to your spec." },
-  { icon: Factory, title: "Bulk Production", description: "Scalable runs from 200 to 20,000 pieces per style." },
-  { icon: Award, title: "Quality Control", description: "Multi-stage QC with pre-shipment inspection reports." },
-  { icon: Truck, title: "Global Logistics", description: "Consolidated shipping, documentation and dispatch." },
+  {
+    icon: Scissors,
+    title: "Cut & Sew",
+    description: "In-house cutting and stitching with tight tolerance control.",
+  },
+  {
+    icon: Ruler,
+    title: "Sampling & Fit",
+    description: "Rapid prototyping and graded size sets before bulk runs.",
+  },
+  {
+    icon: Layers,
+    title: "Private Label",
+    description: "Woven labels, tags and packaging built to your spec.",
+  },
+  {
+    icon: Factory,
+    title: "Bulk Production",
+    description: "Scalable runs from 200 to 20,000 pieces per style.",
+  },
+  {
+    icon: Award,
+    title: "Quality Control",
+    description: "Multi-stage QC with pre-shipment inspection reports.",
+  },
+  {
+    icon: Truck,
+    title: "Global Logistics",
+    description: "Consolidated shipping, documentation and dispatch.",
+  },
 ];
 
 /* ----------------------------- motion helpers ---------------------------- */
@@ -49,7 +78,7 @@ function useReveal<T extends HTMLElement>() {
           obs.disconnect();
         }
       },
-      { threshold: 0.08 }
+      { threshold: 0.06 },
     );
     obs.observe(el);
     return () => obs.disconnect();
@@ -73,8 +102,8 @@ function Reveal({
       className={className}
       style={{
         opacity: visible ? 1 : 0,
-        transform: visible ? "none" : "translateY(18px)",
-        transition: `opacity .7s cubic-bezier(.16,1,.3,1) ${delay}ms, transform .7s cubic-bezier(.16,1,.3,1) ${delay}ms`,
+        transform: visible ? "none" : "translateY(14px)",
+        transition: `opacity .6s cubic-bezier(.16,1,.3,1) ${delay}ms, transform .6s cubic-bezier(.16,1,.3,1) ${delay}ms`,
       }}
     >
       {children}
@@ -82,7 +111,7 @@ function Reveal({
   );
 }
 
-function useCountUp(target: number, duration = 1200) {
+function useCountUp(target: number, duration = 1100) {
   const [value, setValue] = useState(0);
   useEffect(() => {
     if (!target) {
@@ -114,7 +143,7 @@ export default function HomePage() {
 
   const totalColors = useMemo(
     () => brands.data.reduce((sum, b) => sum + (b.colorCount || 0), 0),
-    [brands.data]
+    [brands.data],
   );
 
   const brandCount = useCountUp(brands.data.length);
@@ -122,96 +151,133 @@ export default function HomePage() {
 
   return (
     <div className="bg-white">
-      {/* keyframes */}
       <style>{`
-        @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
-        @keyframes softPulse { 0%,100% { opacity: .6; } 50% { opacity: 1; } }
-        @keyframes floatUp { from { opacity:0; transform: translateY(10px); } to { opacity:1; transform: none; } }
+        @keyframes softPulse { 0%,100% { opacity:.6; } 50% { opacity:1; } }
+        @keyframes scrollHint { 0%,100% { transform: translateY(0); } 50% { transform: translateY(4px); } }
       `}</style>
 
       <Header />
 
       {/* ============================== HERO ============================== */}
-      <section className="relative overflow-hidden border-b border-[#E5E5E5]">
-        <div className="mx-auto grid max-w-[1400px] items-center gap-8 px-4 py-10 sm:px-6 lg:grid-cols-12 lg:gap-12 lg:px-8 lg:py-14">
-          {/* left */}
-          <div className="lg:col-span-6">
-            <div className="inline-flex items-center gap-2 rounded-full border border-[#E5E5E5] bg-white px-3 py-1 text-[11px] font-medium uppercase tracking-[0.16em] text-black/60">
-              <span className="h-1.5 w-1.5 rounded-full bg-[#B80A0B]" style={{ animation: "softPulse 2s ease-in-out infinite" }} />
+      <section className="relative flex min-h-[52vh] items-center overflow-hidden bg-black lg:min-h-[58vh]">
+        {/* Fixed background — steady on scroll */}
+        <div
+          className="absolute inset-0 bg-cover bg-center bg-fixed"
+          style={{ backgroundImage: `url(${HERO_BG})` }}
+          aria-hidden
+        />
+        {/* Overlay for legibility */}
+        <div
+          className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/65 to-black/30"
+          aria-hidden
+        />
+
+        <div className="relative mx-auto w-full max-w-[1400px] px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
+          <div className="max-w-2xl">
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.16em] text-white/80 backdrop-blur">
+              <span
+                className="h-1.5 w-1.5 rounded-full bg-[#B80A0B]"
+                style={{ animation: "softPulse 2s ease-in-out infinite" }}
+              />
               Executive Apparel Manufacturing
             </div>
 
-            <h1 className="mt-5 text-4xl font-semibold leading-[1.04] tracking-tight text-black sm:text-5xl lg:text-[54px]">
+            <h1 className="mt-4 text-3xl font-semibold leading-[1.05] tracking-tight text-white sm:text-4xl lg:text-5xl">
               Precision garments,
               <br />
               built for serious labels.
             </h1>
 
-            <p className="mt-4 max-w-xl text-[15px] leading-7 text-black/60">
-              Full-service apparel manufacturing. From pattern and sampling to
-              bulk cut-and-sew — production-grade quality at scale.
+            <p className="mt-3 max-w-xl text-[14px] leading-6 text-white/70">
+              Full-service apparel manufacturing. Pattern, sampling and bulk
+              cut-and-sew — production-grade quality at scale.
             </p>
 
-            <div className="mt-6 flex flex-wrap items-center gap-2.5">
+            <div className="mt-5 flex flex-wrap items-center gap-2.5">
               <Link
                 href="/brands"
-                className="inline-flex h-11 items-center gap-1.5 rounded-md bg-[#B80A0B] px-5 text-[13px] font-medium text-white transition-all hover:bg-[#9C0909] hover:-translate-y-px"
+                className="inline-flex h-10 items-center gap-1.5 rounded-md bg-[#B80A0B] px-4 text-[13px] font-medium text-white transition-all hover:bg-[#9C0909] hover:-translate-y-px"
               >
-                Explore brands <ArrowRight className="h-4 w-4" />
+                Explore brands <ArrowRight className="h-3.5 w-3.5" />
               </Link>
-              <Link
-                href="/#contact"
-                className="inline-flex h-11 items-center gap-1.5 rounded-md border border-[#E5E5E5] bg-white px-5 text-[13px] font-medium text-black transition-colors hover:bg-[#F6F6F6]"
+              <a
+                href={`https://wa.me/${WHATSAPP_NUMBER}`}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex h-10 items-center gap-1.5 rounded-md border border-white/25 bg-white/5 px-4 text-[13px] font-medium text-white backdrop-blur transition-colors hover:bg-white/10"
               >
-                Request a quote
-              </Link>
+                <MessageCircle className="h-3.5 w-3.5" />
+                WhatsApp
+              </a>
             </div>
 
-            <dl className="mt-8 grid max-w-lg grid-cols-3 gap-4 border-t border-[#E5E5E5] pt-6">
+            {/* Inline stats */}
+            <dl className="mt-7 flex flex-wrap items-center gap-x-8 gap-y-3 border-t border-white/15 pt-5">
               <div>
-                <dt className="text-[11px] font-medium uppercase tracking-[0.14em] text-black/40">
+                <dt className="text-[10px] font-medium uppercase tracking-[0.16em] text-white/45">
                   Brands
                 </dt>
-                <dd className="mt-1 text-3xl font-semibold tracking-tight tabular-nums text-black">
-                  {brands.loading ? <Skeleton className="h-8 w-10" /> : brandCount}
+                <dd className="mt-0.5 text-2xl font-semibold tabular-nums tracking-tight text-white">
+                  {brands.loading ? (
+                    <Skeleton className="h-7 w-10" />
+                  ) : (
+                    brandCount
+                  )}
                 </dd>
               </div>
               <div>
-                <dt className="text-[11px] font-medium uppercase tracking-[0.14em] text-black/40">
+                <dt className="text-[10px] font-medium uppercase tracking-[0.16em] text-white/45">
                   Colours
                 </dt>
-                <dd className="mt-1 text-3xl font-semibold tracking-tight tabular-nums text-black">
-                  {brands.loading ? <Skeleton className="h-8 w-10" /> : colorCount}
+                <dd className="mt-0.5 text-2xl font-semibold tabular-nums tracking-tight text-white">
+                  {brands.loading ? (
+                    <Skeleton className="h-7 w-10" />
+                  ) : (
+                    colorCount
+                  )}
                 </dd>
               </div>
               <div>
-                <dt className="text-[11px] font-medium uppercase tracking-[0.14em] text-black/40">
+                <dt className="text-[10px] font-medium uppercase tracking-[0.16em] text-white/45">
                   MOQ
                 </dt>
-                <dd className="mt-1 text-3xl font-semibold tracking-tight tabular-nums text-black">
+                <dd className="mt-0.5 text-2xl font-semibold tabular-nums tracking-tight text-white">
                   200
                 </dd>
               </div>
             </dl>
           </div>
+        </div>
 
-          {/* right — collage of first brand images */}
-          <div className="lg:col-span-6">
-            <HeroCollage brands={featured} loading={brands.loading} />
-          </div>
+        {/* scroll hint */}
+        <div
+          className="absolute bottom-3 left-1/2 hidden -translate-x-1/2 text-white/50 lg:block"
+          style={{ animation: "scrollHint 2s ease-in-out infinite" }}
+          aria-hidden
+        >
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+          >
+            <path d="M6 9l6 6 6-6" />
+          </svg>
         </div>
       </section>
 
       {/* ============================ BRANDS ============================== */}
       <section className="border-b border-[#E5E5E5]">
-        <div className="mx-auto max-w-[1400px] px-4 py-12 sm:px-6 lg:px-8 lg:py-14">
+        <div className="mx-auto max-w-[1400px] px-4 py-10 sm:px-6 lg:px-8 lg:py-12">
           <Reveal>
-            <div className="flex flex-wrap items-end justify-between gap-4">
+            <div className="flex flex-wrap items-end justify-between gap-3">
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#B80A0B]">
                   Catalogue
                 </p>
-                <h2 className="mt-2 text-2xl font-semibold tracking-tight text-black sm:text-3xl">
+                <h2 className="mt-1.5 text-2xl font-semibold tracking-tight text-black sm:text-3xl">
                   Brands & products
                 </h2>
               </div>
@@ -224,11 +290,14 @@ export default function HomePage() {
             </div>
           </Reveal>
 
-          <div className="mt-6">
+          <div className="mt-5">
             {brands.loading ? (
-              <div className="grid gap-3 grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+              <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
                 {Array.from({ length: 8 }).map((_, i) => (
-                  <Skeleton key={i} className="aspect-[4/5] w-full rounded-lg" />
+                  <Skeleton
+                    key={i}
+                    className="aspect-[4/5] w-full rounded-lg"
+                  />
                 ))}
               </div>
             ) : featured.length === 0 ? (
@@ -240,12 +309,12 @@ export default function HomePage() {
                 />
               </div>
             ) : (
-              <div className="grid gap-3 grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+              <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
                 {featured.map((brand, i) => (
-                  <Reveal key={brand.id} delay={i * 50}>
+                  <Reveal key={brand.id} delay={i * 40}>
                     <Link
                       href={`/brands/${brand.slug}`}
-                      className="group block overflow-hidden rounded-lg border border-[#E5E5E5] bg-white transition-all duration-300 hover:border-black hover:-translate-y-0.5"
+                      className="group block overflow-hidden rounded-lg border border-[#E5E5E5] bg-white transition-all duration-300 hover:-translate-y-0.5 hover:border-black"
                     >
                       <div className="relative aspect-[4/5] overflow-hidden bg-[#F6F6F6]">
                         {brand.image ? (
@@ -256,19 +325,20 @@ export default function HomePage() {
                             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.06]"
                           />
                         ) : null}
-                        <span className="absolute left-3 top-3 rounded-full border border-[#E5E5E5] bg-white/95 px-2 py-0.5 text-[11px] font-medium text-black backdrop-blur">
-                          {brand.colorCount} colour{brand.colorCount === 1 ? "" : "s"}
+                        <span className="absolute left-2.5 top-2.5 rounded-full border border-[#E5E5E5] bg-white/95 px-2 py-0.5 text-[10px] font-medium text-black backdrop-blur">
+                          {brand.colorCount} colour
+                          {brand.colorCount === 1 ? "" : "s"}
                         </span>
-                        <span className="absolute right-3 bottom-3 flex h-7 w-7 items-center justify-center rounded-full bg-black text-white opacity-0 transition-all duration-300 group-hover:opacity-100 group-hover:translate-y-0 translate-y-1">
+                        <span className="absolute bottom-2.5 right-2.5 flex h-7 w-7 translate-y-1 items-center justify-center rounded-full bg-black text-white opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
                           <ArrowUpRight className="h-3.5 w-3.5" />
                         </span>
                       </div>
-                      <div className="px-3.5 py-3">
-                        <h3 className="text-[14px] font-semibold tracking-tight text-black">
+                      <div className="px-3 py-2.5">
+                        <h3 className="text-[13px] font-semibold tracking-tight text-black">
                           {brand.name}
                         </h3>
-                        <p className="mt-1 text-[12px] leading-5 text-black/55">
-                          {truncate(brand.description, 70)}
+                        <p className="mt-0.5 text-[12px] leading-5 text-black/55">
+                          {truncate(brand.description, 60)}
                         </p>
                       </div>
                     </Link>
@@ -285,33 +355,31 @@ export default function HomePage() {
         id="capabilities"
         className="scroll-mt-20 border-b border-[#E5E5E5] bg-[#F6F6F6]"
       >
-        <div className="mx-auto max-w-[1400px] px-4 py-12 sm:px-6 lg:px-8 lg:py-14">
+        <div className="mx-auto max-w-[1400px] px-4 py-10 sm:px-6 lg:px-8 lg:py-12">
           <Reveal>
-            <div className="flex flex-wrap items-end justify-between gap-4">
-              <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#B80A0B]">
-                  Capabilities
-                </p>
-                <h2 className="mt-2 text-2xl font-semibold tracking-tight text-black sm:text-3xl">
-                  Full-stack production
-                </h2>
-              </div>
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#B80A0B]">
+                Capabilities
+              </p>
+              <h2 className="mt-1.5 text-2xl font-semibold tracking-tight text-black sm:text-3xl">
+                Full-stack production
+              </h2>
             </div>
           </Reveal>
 
-          <div className="mt-6 grid gap-px overflow-hidden rounded-lg border border-[#E5E5E5] bg-[#E5E5E5] sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-5 grid gap-px overflow-hidden rounded-lg border border-[#E5E5E5] bg-[#E5E5E5] sm:grid-cols-2 lg:grid-cols-3">
             {CAPABILITIES.map((cap, i) => {
               const Icon = cap.icon;
               return (
-                <Reveal key={cap.title} delay={i * 40}>
-                  <div className="group h-full bg-white p-5 transition-colors hover:bg-[#FAFAFA]">
-                    <span className="flex h-8 w-8 items-center justify-center rounded-md border border-[#E5E5E5] bg-[#F6F6F6] text-[#B80A0B] transition-colors group-hover:border-[#B80A0B]/25 group-hover:bg-[#B80A0B]/5">
-                      <Icon className="h-4 w-4" />
+                <Reveal key={cap.title} delay={i * 30}>
+                  <div className="group h-full bg-white p-4 transition-colors hover:bg-[#FAFAFA]">
+                    <span className="flex h-7 w-7 items-center justify-center rounded-md border border-[#E5E5E5] bg-[#F6F6F6] text-[#B80A0B] transition-colors group-hover:border-[#B80A0B]/25 group-hover:bg-[#B80A0B]/5">
+                      <Icon className="h-3.5 w-3.5" />
                     </span>
-                    <h3 className="mt-4 text-[14px] font-semibold tracking-tight text-black">
+                    <h3 className="mt-3 text-[13px] font-semibold tracking-tight text-black">
                       {cap.title}
                     </h3>
-                    <p className="mt-1 text-[13px] leading-6 text-black/55">
+                    <p className="mt-0.5 text-[12px] leading-5 text-black/55">
                       {cap.description}
                     </p>
                   </div>
@@ -323,35 +391,29 @@ export default function HomePage() {
       </section>
 
       {/* ============================ GALLERY ============================= */}
-      <section
-        id="gallery"
-        className="scroll-mt-20 border-b border-[#E5E5E5]"
-      >
-        <div className="mx-auto max-w-[1400px] px-4 py-12 sm:px-6 lg:px-8 lg:py-14">
+      <section id="gallery" className="scroll-mt-20 border-b border-[#E5E5E5]">
+        <div className="mx-auto max-w-[1400px] px-4 py-10 sm:px-6 lg:px-8 lg:py-12">
           <Reveal>
-            <div className="flex flex-wrap items-end justify-between gap-4">
+            <div className="flex flex-wrap items-end justify-between gap-3">
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#B80A0B]">
                   Studio
                 </p>
-                <h2 className="mt-2 text-2xl font-semibold tracking-tight text-black sm:text-3xl">
+                <h2 className="mt-1.5 text-2xl font-semibold tracking-tight text-black sm:text-3xl">
                   Inside the workshop
                 </h2>
               </div>
-              <span className="text-[12px] text-black/45 hidden sm:block">
+              <span className="hidden text-[12px] text-black/45 sm:block">
                 Scroll horizontally →
               </span>
             </div>
           </Reveal>
 
-          <div className="mt-6">
+          <div className="mt-5">
             {gallery.loading ? (
               <div className="flex gap-3 overflow-hidden">
                 {Array.from({ length: 4 }).map((_, i) => (
-                  <Skeleton
-                    key={i}
-                    className="h-56 w-72 shrink-0 rounded-lg"
-                  />
+                  <Skeleton key={i} className="h-48 w-64 shrink-0 rounded-lg" />
                 ))}
               </div>
             ) : galleryStrip.length === 0 ? (
@@ -367,7 +429,7 @@ export default function HomePage() {
                 {galleryStrip.map((item) => (
                   <figure
                     key={item.id}
-                    className="group relative h-56 w-72 shrink-0 snap-start overflow-hidden rounded-lg border border-[#E5E5E5] bg-[#F6F6F6]"
+                    className="group relative h-48 w-64 shrink-0 snap-start overflow-hidden rounded-lg border border-[#E5E5E5] bg-[#F6F6F6]"
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
@@ -375,8 +437,8 @@ export default function HomePage() {
                       alt={item.title}
                       className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.06]"
                     />
-                    <figcaption className="absolute inset-x-0 bottom-0 translate-y-2 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
-                      <p className="text-[13px] font-medium text-white">
+                    <figcaption className="absolute inset-x-0 bottom-0 translate-y-2 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-3 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
+                      <p className="text-[12px] font-medium text-white">
                         {item.title}
                       </p>
                     </figcaption>
@@ -390,20 +452,20 @@ export default function HomePage() {
 
       {/* ============================ CONTACT ============================= */}
       <section id="contact" className="scroll-mt-20 bg-black">
-        <div className="mx-auto grid max-w-[1400px] gap-10 px-4 py-14 sm:px-6 lg:grid-cols-12 lg:gap-12 lg:px-8 lg:py-16">
+        <div className="mx-auto grid max-w-[1400px] gap-8 px-4 py-12 sm:px-6 lg:grid-cols-12 lg:gap-10 lg:px-8 lg:py-14">
           <div className="lg:col-span-5">
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#B80A0B]">
               Get in touch
             </p>
-            <h2 className="mt-3 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+            <h2 className="mt-2 text-2xl font-semibold tracking-tight text-white sm:text-3xl">
               Let's build your next production run.
             </h2>
-            <p className="mt-4 max-w-md text-[15px] leading-7 text-white/60">
+            <p className="mt-3 max-w-md text-[14px] leading-6 text-white/60">
               Share your style, quantities and timeline. We'll respond with
               sampling lead time, pricing and a production slot.
             </p>
 
-            <ul className="mt-8 space-y-4 border-t border-white/10 pt-6">
+            <ul className="mt-6 space-y-3.5 border-t border-white/10 pt-5">
               <li className="flex items-start gap-3">
                 <Mail className="mt-0.5 h-4 w-4 shrink-0 text-white/40" />
                 <div>
@@ -419,6 +481,22 @@ export default function HomePage() {
                 </div>
               </li>
               <li className="flex items-start gap-3">
+                <MessageCircle className="mt-0.5 h-4 w-4 shrink-0 text-white/40" />
+                <div>
+                  <p className="text-[11px] uppercase tracking-[0.14em] text-white/40">
+                    WhatsApp
+                  </p>
+                  <a
+                    href={`https://wa.me/${WHATSAPP_NUMBER}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-0.5 block text-[13px] font-medium text-white hover:text-[#25D366]"
+                  >
+                    +91 80877 76060
+                  </a>
+                </div>
+              </li>
+              <li className="flex items-start gap-3">
                 <Palette className="mt-0.5 h-4 w-4 shrink-0 text-white/40" />
                 <div>
                   <p className="text-[11px] uppercase tracking-[0.14em] text-white/40">
@@ -430,10 +508,23 @@ export default function HomePage() {
                 </div>
               </li>
             </ul>
+
+            <a
+              href={`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
+                "Hi SS Executive, I'd like to discuss a production enquiry.",
+              )}`}
+              target="_blank"
+              rel="noreferrer"
+              className="group mt-5 inline-flex h-10 items-center gap-2 rounded-md bg-[#25D366] px-4 text-[13px] font-semibold text-white transition-colors hover:bg-[#1fb457]"
+            >
+              <MessageCircle className="h-4 w-4" />
+              Chat on WhatsApp
+              <ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+            </a>
           </div>
 
           <div className="lg:col-span-7">
-            <div className="rounded-lg border border-white/10 bg-white/[0.03] p-5 sm:p-6">
+            <div className="rounded-lg border border-white/10 bg-white/[0.03] p-4 sm:p-5">
               <ContactForm />
             </div>
           </div>
@@ -441,68 +532,8 @@ export default function HomePage() {
       </section>
 
       <Footer />
-    </div>
-  );
-}
 
-/* ---------------------------- hero collage ------------------------------- */
-
-function HeroCollage({
-  brands,
-  loading,
-}: {
-  brands: { id: string; image: string; name: string }[];
-  loading: boolean;
-}) {
-  if (loading) {
-    return (
-      <div className="grid grid-cols-2 gap-3">
-        <Skeleton className="aspect-[4/5] w-full rounded-lg" />
-        <Skeleton className="aspect-[4/5] w-full rounded-lg" />
-      </div>
-    );
-  }
-
-  const a = brands[0];
-  const b = brands[1];
-
-  return (
-    <div className="relative">
-      <div className="grid grid-cols-2 gap-3">
-        <Reveal delay={80}>
-          <div className="overflow-hidden rounded-lg border border-[#E5E5E5] bg-[#F6F6F6]">
-            {a?.image ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={a.image}
-                alt={a.name}
-                className="aspect-[4/5] w-full object-cover"
-              />
-            ) : (
-              <div className="aspect-[4/5] w-full" />
-            )}
-          </div>
-        </Reveal>
-        <Reveal delay={180}>
-          <div className="overflow-hidden rounded-lg border border-[#E5E5E5] bg-[#F6F6F6]">
-            {b?.image ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={b.image}
-                alt={b.name}
-                className="aspect-[4/5] w-full object-cover"
-              />
-            ) : (
-              <div className="aspect-[4/5] w-full" />
-            )}
-          </div>
-        </Reveal>
-      </div>
-
-      <div className="absolute -bottom-4 left-1/2 hidden -translate-x-1/2 rounded-full border border-[#E5E5E5] bg-white px-4 py-2 text-[11px] font-medium uppercase tracking-[0.16em] text-black/60 sm:flex sm:items-center sm:gap-2">
-        <span className="h-1.5 w-1.5 rounded-full bg-[#1845D6]" />
-        Production-grade since day one
-      </div>
+    
     </div>
   );
 }
@@ -510,9 +541,16 @@ function HeroCollage({
 /* ----------------------------- contact form ------------------------------ */
 
 function ContactForm() {
-  const [form, setForm] = useState({ name: "", email: "", phone: "", message: "" });
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    message: "",
+  });
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">(
+    "idle",
+  );
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -648,7 +686,7 @@ function Field({
         <textarea
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className={`${base} ${border} min-h-[88px] resize-y py-2.5 leading-6`}
+          className={`${base} ${border} min-h-[84px] resize-y py-2.5 leading-6`}
         />
       ) : (
         <input
@@ -658,7 +696,9 @@ function Field({
           className={`${base} ${border} h-10`}
         />
       )}
-      {error ? <p className="mt-1 text-[11px] text-[#B80A0B]">{error}</p> : null}
+      {error ? (
+        <p className="mt-1 text-[11px] text-[#B80A0B]">{error}</p>
+      ) : null}
     </div>
   );
 }
