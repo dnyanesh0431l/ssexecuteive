@@ -13,6 +13,15 @@ const NAV = [
   { label: "Contact", href: "/#contact" },
 ];
 
+const TICKER = [
+  "Cut & Sew",
+  "Private Label",
+  "Sampling",
+  "Bulk Production",
+  "Quality Control",
+  "Global Logistics",
+];
+
 export function Header() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
@@ -30,97 +39,117 @@ export function Header() {
   }, [pathname]);
 
   return (
-    <header
-      className={cn(
-        "sticky top-0 z-50 border-b bg-white/90 backdrop-blur",
-        scrolled ? "border-[#E5E5E5]" : "border-transparent"
-      )}
-    >
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5 sm:px-8 lg:h-20">
-        <Link href="/" className="flex items-center gap-2.5" aria-label="SS Executive home">
-          <span className="flex h-9 w-9 items-center justify-center rounded-md bg-[#B80A0B] text-[13px] font-bold tracking-tight text-white">
-            SS
-          </span>
-          <span className="leading-tight">
-            <span className="block text-[13px] font-semibold uppercase tracking-[0.14em] text-black">
+    <>
+      {/* Red announcement strip with scrolling capabilities */}
+      <div className="relative overflow-hidden bg-[#B80A0B] text-white">
+        <div className="flex animate-[marquee_38s_linear_infinite] whitespace-nowrap">
+          {[0, 1].map((dup) => (
+            <div key={dup} className="flex shrink-0 items-center gap-8 pr-8">
+              {TICKER.concat(TICKER).map((item, i) => (
+                <span
+                  key={`${dup}-${i}`}
+                  className="flex items-center gap-8 text-[11px] font-medium uppercase tracking-[0.22em] text-white/90"
+                >
+                  {item}
+                  <span className="h-1 w-1 rounded-full bg-white/40" />
+                </span>
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <header
+        className={cn(
+          "sticky top-0 z-50 border-b bg-white/95 backdrop-blur",
+          scrolled ? "border-[#E5E5E5]" : "border-transparent"
+        )}
+      >
+        <div className="mx-auto flex h-14 max-w-[1400px] items-center justify-between px-4 sm:px-6 lg:px-8">
+          <Link href="/" className="flex items-center gap-2" aria-label="SS Executive">
+            <span className="flex h-7 w-7 items-center justify-center rounded bg-[#B80A0B] text-[11px] font-bold tracking-tight text-white">
+              SS
+            </span>
+            <span className="text-[13px] font-semibold uppercase tracking-[0.16em] text-black">
               SS Executive
             </span>
-            <span className="block text-[10px] uppercase tracking-[0.22em] text-black/45">
-              Apparel Manufacturing
-            </span>
-          </span>
-        </Link>
+          </Link>
 
-        <nav className="hidden items-center gap-9 md:flex">
-          {NAV.map((item) => {
-            const active =
-              item.href === "/"
-                ? pathname === "/"
-                : !item.href.includes("#") && pathname.startsWith(item.href);
-            return (
+          <nav className="hidden items-center gap-7 md:flex">
+            {NAV.map((item) => {
+              const active =
+                item.href === "/"
+                  ? pathname === "/"
+                  : !item.href.includes("#") && pathname.startsWith(item.href);
+              return (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  className={cn(
+                    "group relative text-[13px] font-medium tracking-wide transition-colors",
+                    active ? "text-black" : "text-black/55 hover:text-black"
+                  )}
+                >
+                  {item.label}
+                  <span
+                    className={cn(
+                      "absolute -bottom-1 left-0 h-[2px] rounded-full bg-[#B80A0B] transition-all duration-300",
+                      active ? "w-full" : "w-0 group-hover:w-full"
+                    )}
+                  />
+                </Link>
+              );
+            })}
+          </nav>
+
+          <div className="flex items-center gap-2">
+            <Link
+              href="/#contact"
+              className="hidden h-9 items-center gap-1.5 rounded-md bg-black px-4 text-[12px] font-medium text-white transition-colors hover:bg-[#B80A0B] md:inline-flex"
+            >
+              Start a project
+              <ArrowUpRight className="h-3.5 w-3.5" />
+            </Link>
+
+            <button
+              type="button"
+              onClick={() => setOpen((v) => !v)}
+              aria-label="Toggle menu"
+              aria-expanded={open}
+              className="-mr-1 rounded-md p-2 text-black md:hidden"
+            >
+              {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile drawer */}
+        <div
+          className={cn(
+            "overflow-hidden border-[#E5E5E5] transition-[max-height,opacity] duration-300 md:hidden",
+            open ? "max-h-96 border-t opacity-100" : "max-h-0 opacity-0"
+          )}
+        >
+          <nav className="mx-auto max-w-[1400px] space-y-0.5 px-4 py-3">
+            {NAV.map((item) => (
               <Link
                 key={item.label}
                 href={item.href}
-                className={cn(
-                  "relative text-[13px] font-medium tracking-wide transition-colors",
-                  active ? "text-black" : "text-black/55 hover:text-black"
-                )}
+                className="block rounded-md px-3 py-2.5 text-[14px] font-medium text-black transition-colors hover:bg-[#F6F6F6]"
               >
                 {item.label}
-                {active ? (
-                  <span className="absolute -bottom-2 left-0 h-[2px] w-full rounded-full bg-[#B80A0B]" />
-                ) : null}
               </Link>
-            );
-          })}
-        </nav>
-
-        <div className="hidden md:block">
-          <Link
-            href="/#contact"
-            className="inline-flex h-10 items-center gap-1.5 rounded-md bg-black px-5 text-[13px] font-medium text-white transition-colors hover:bg-[#B80A0B]"
-          >
-            Start a project
-            <ArrowUpRight className="h-3.5 w-3.5" />
-          </Link>
-        </div>
-
-        <button
-          type="button"
-          onClick={() => setOpen((v) => !v)}
-          aria-label="Toggle menu"
-          aria-expanded={open}
-          className="-mr-2 rounded-md p-2 text-black md:hidden"
-        >
-          {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-        </button>
-      </div>
-
-      {open ? (
-        <div className="border-t border-[#E5E5E5] bg-white md:hidden">
-          <nav className="mx-auto max-w-7xl px-5 py-4">
-            <ul className="space-y-1">
-              {NAV.map((item) => (
-                <li key={item.label}>
-                  <Link
-                    href={item.href}
-                    className="block rounded-md px-3 py-3 text-[14px] font-medium text-black transition-colors hover:bg-[#F6F6F6]"
-                  >
-                    {item.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
+            ))}
             <Link
               href="/#contact"
-              className="mt-3 inline-flex h-11 w-full items-center justify-center gap-1.5 rounded-md bg-black text-[13px] font-medium text-white transition-colors hover:bg-[#B80A0B]"
+              className="mt-2 inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-md bg-black text-[13px] font-medium text-white"
             >
               Start a project
               <ArrowUpRight className="h-3.5 w-3.5" />
             </Link>
           </nav>
         </div>
-      ) : null}
-    </header>
+      </header>
+    </>
   );
 }
