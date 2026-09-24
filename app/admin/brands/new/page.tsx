@@ -1,12 +1,21 @@
 // app/admin/brands/new/page.tsx
 "use client";
 
+import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
-import { ArrowLeft, Info } from "lucide-react";
+import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import { PageHeader } from "../../../components/admin/PageHeader";
 import { BrandForm } from "../../../components/admin/brands/BrandForm";
+import { ErrorState } from "../../../components/ui/ErrorState";
+import { Skeleton } from "../../../components/ui/Skeleton";
+import { useCategories } from "../../../lib/hooks/useCollectionData";
 
-export default function NewBrandPage() {
+function NewBrandInner() {
+  const search = useSearchParams();
+  const defaultCategoryId = search.get("categoryId") ?? undefined;
+  const { data: categories, loading, error } = useCategories();
+
   return (
     <>
       <Link
@@ -18,22 +27,40 @@ export default function NewBrandPage() {
 
       <PageHeader
         title="New brand"
-        description="Create the brand record first. Colour variants are added on the next step."
+        description="Create the brand, then add colours to it."
       />
 
-      <BrandForm />
-
-      <div className="mt-6 flex items-start gap-3 rounded-lg border border-[#E5E5E5] bg-[#F6F6F6] px-5 py-4">
-        <Info className="mt-0.5 h-4 w-4 shrink-0 text-[#1845D6]" />
-        <p className="text-[13px] leading-6 text-black/60">
-          Colours are stored in the{" "}
-          <code className="rounded bg-white px-1.5 py-0.5 font-mono text-[11px] text-black">
-            brands/&#123;brandId&#125;/colors
-          </code>{" "}
-          subcollection. Once this brand is saved you will be taken to its page,
-          where you can add colours, hex codes, images and available sizes.
-        </p>
-      </div>
+      {loading ? (
+        <div className="rounded-lg border border-[#E5E5E5] p-5">
+          <div className="grid gap-5 sm:grid-cols-2">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-24 w-full sm:col-span-2" />
+            <Skeleton className="h-56 w-full sm:col-span-2" />
+          </div>
+        </div>
+      ) : error ? (
+        <div className="rounded-lg border border-[#E5E5E5] bg-white">
+          <ErrorState message={error} />
+        </div>
+      ) : categories.length === 0 ? (
+        <div className="rounded-lg border border-[#E5E5E5] bg-white">
+          <ErrorState message="Create a category first before adding a brand." />
+        </div>
+      ) : (
+        <BrandForm
+          categories={categories}
+          defaultCategoryId={defaultCategoryId}
+        />
+      )}
     </>
+  );
+}
+
+export default function NewBrandPage() {
+  return (
+    <Suspense fallback={null}>
+      <NewBrandInner />
+    </Suspense>
   );
 }

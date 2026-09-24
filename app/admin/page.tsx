@@ -1,6 +1,18 @@
 // app/admin/page.tsx
 "use client";
 
+import {
+  ArrowRight,
+  Image as ImageIcon,
+  Images,
+  Layers,
+  Mail,
+  Palette,
+  Plus,
+  Shirt,
+} from "lucide-react";
+import Link from "next/link";
+import { useMemo } from "react";
 import { PageHeader } from "../components/admin/PageHeader";
 import { StatCard } from "../components/admin/StatCard";
 import { StatusBadge } from "../components/ui/Badge";
@@ -10,17 +22,18 @@ import { EmptyState } from "../components/ui/EmptyState";
 import { ErrorState } from "../components/ui/ErrorState";
 import { Skeleton } from "../components/ui/Skeleton";
 import {
+  useBanners,
   useBrands,
+  useCategories,
   useContactRequests,
   useGallery,
 } from "../lib/hooks/useCollectionData";
 import { formatDate, truncate } from "../lib/utils";
-import { ArrowRight, Images, Mail, Palette, Plus, Shirt } from "lucide-react";
-import Link from "next/link";
-import { useMemo } from "react";
 
 export default function AdminDashboardPage() {
   const brands = useBrands();
+  const categories = useCategories();
+  const banners = useBanners();
   const gallery = useGallery();
   const requests = useContactRequests();
 
@@ -30,9 +43,15 @@ export default function AdminDashboardPage() {
   );
 
   const newRequests = useMemo(
-    () => requests.data.filter((request) => request.status === "new").length,
+    () => requests.data.filter((r) => r.status === "new").length,
     [requests.data],
   );
+
+  const categoryMap = useMemo(() => {
+    const map = new Map<string, string>();
+    categories.data.forEach((c) => map.set(c.id, c.name));
+    return map;
+  }, [categories.data]);
 
   const recentRequests = requests.data.slice(0, 5);
   const recentBrands = brands.data.slice(0, 5);
@@ -43,28 +62,41 @@ export default function AdminDashboardPage() {
         title="Dashboard"
         description="Overview of SS Executive catalogue and inbound enquiries."
         actions={
-          <Link href="/admin/brands/new">
+          <Link href="/admin/categories/new">
             <Button size="sm" icon={<Plus className="h-3.5 w-3.5" />}>
-              New brand
+              New category
             </Button>
           </Link>
         }
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <StatCard
-          label="Total Brands"
+          label="Categories"
+          value={categories.data.length}
+          loading={categories.loading}
+          icon={<Layers className="h-4 w-4" />}
+          accent="blue"
+        />
+        <StatCard
+          label="Brands"
           value={brands.data.length}
           loading={brands.loading}
           icon={<Shirt className="h-4 w-4" />}
           accent="red"
         />
         <StatCard
-          label="Total Colours"
+          label="Colours"
           value={totalColors}
           loading={brands.loading}
           icon={<Palette className="h-4 w-4" />}
           accent="blue"
+        />
+        <StatCard
+          label="Banners"
+          value={banners.data.length}
+          loading={banners.loading}
+          icon={<ImageIcon className="h-4 w-4" />}
         />
         <StatCard
           label="Gallery Images"
@@ -189,10 +221,10 @@ export default function AdminDashboardPage() {
                     className="flex items-center gap-4 px-5 py-3.5 transition-colors hover:bg-[#F6F6F6]"
                   >
                     <span className="h-12 w-10 shrink-0 overflow-hidden rounded border border-[#E5E5E5] bg-[#F6F6F6]">
-                      {brand.image ? (
-                        // eslint-disable-next-line ..next/next/no-img-element
+                      {brand.images[0] ? (
+                        // eslint-disable-next-line @next/next/no-img-element
                         <img
-                          src={brand.image}
+                          src={brand.images[0]}
                           alt=""
                           className="h-full w-full object-cover"
                         />
@@ -203,9 +235,9 @@ export default function AdminDashboardPage() {
                         {brand.name}
                       </p>
                       <p className="mt-0.5 truncate text-xs text-black/50">
+                        {categoryMap.get(brand.categoryId) ?? "No category"} ·{" "}
                         {brand.colorCount} colour
-                        {brand.colorCount === 1 ? "" : "s"} ·{" "}
-                        {formatDate(brand.createdAt)}
+                        {brand.colorCount === 1 ? "" : "s"}
                       </p>
                     </div>
                     <ArrowRight className="h-4 w-4 shrink-0 text-black/25" />

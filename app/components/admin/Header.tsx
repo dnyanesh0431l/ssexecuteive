@@ -5,8 +5,11 @@ import { usePathname } from "next/navigation";
 import { Menu } from "lucide-react";
 
 const TITLES: Array<{ match: string; title: string }> = [
+  { match: "/admin/categories/new", title: "New Category" },
+  { match: "/admin/categories", title: "Categories" },
   { match: "/admin/brands/new", title: "New Brand" },
   { match: "/admin/brands", title: "Brands" },
+  { match: "/admin/banners", title: "Banners" },
   { match: "/admin/gallery", title: "Gallery" },
   { match: "/admin/contact-requests", title: "Contact Requests" },
   { match: "/admin", title: "Dashboard" },

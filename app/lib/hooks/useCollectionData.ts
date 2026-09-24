@@ -2,10 +2,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { subscribeToBanners } from "../firebase/banners";
 import { subscribeToBrands } from "../firebase/brands";
-import { subscribeToGallery } from "../firebase/gallery";
+import { subscribeToCategories } from "../firebase/categories";
 import { subscribeToContactRequests } from "../firebase/contactRequests";
-import type { Brand, ContactRequest, GalleryImage } from "../types";
+import { subscribeToGallery } from "../firebase/gallery";
+import type {
+  Banner,
+  Brand,
+  Category,
+  ContactRequest,
+  GalleryImage,
+} from "../types";
 
 interface State<T> {
   data: T;
@@ -13,7 +21,8 @@ interface State<T> {
   error: string | null;
 }
 
-const GENERIC_ERROR = "Could not load data. Please check your connection and try again.";
+const GENERIC_ERROR =
+  "Could not load data. Please check your connection and try again.";
 
 export function useBrands(): State<Brand[]> {
   const [state, setState] = useState<State<Brand[]>>({
@@ -25,7 +34,7 @@ export function useBrands(): State<Brand[]> {
   useEffect(() => {
     const unsubscribe = subscribeToBrands(
       (brands) => setState({ data: brands, loading: false, error: null }),
-      () => setState({ data: [], loading: false, error: GENERIC_ERROR })
+      () => setState({ data: [], loading: false, error: GENERIC_ERROR }),
     );
     return () => unsubscribe();
   }, []);
@@ -43,7 +52,7 @@ export function useGallery(): State<GalleryImage[]> {
   useEffect(() => {
     const unsubscribe = subscribeToGallery(
       (items) => setState({ data: items, loading: false, error: null }),
-      () => setState({ data: [], loading: false, error: GENERIC_ERROR })
+      () => setState({ data: [], loading: false, error: GENERIC_ERROR }),
     );
     return () => unsubscribe();
   }, []);
@@ -61,7 +70,43 @@ export function useContactRequests(): State<ContactRequest[]> {
   useEffect(() => {
     const unsubscribe = subscribeToContactRequests(
       (requests) => setState({ data: requests, loading: false, error: null }),
-      () => setState({ data: [], loading: false, error: GENERIC_ERROR })
+      () => setState({ data: [], loading: false, error: GENERIC_ERROR }),
+    );
+    return () => unsubscribe();
+  }, []);
+
+  return state;
+}
+
+export function useCategories(): State<Category[]> {
+  const [state, setState] = useState<State<Category[]>>({
+    data: [],
+    loading: true,
+    error: null,
+  });
+
+  useEffect(() => {
+    const unsubscribe = subscribeToCategories(
+      (data) => setState({ data, loading: false, error: null }),
+      () => setState({ data: [], loading: false, error: GENERIC_ERROR }),
+    );
+    return () => unsubscribe();
+  }, []);
+
+  return state;
+}
+
+export function useBanners(): State<Banner[]> {
+  const [state, setState] = useState<State<Banner[]>>({
+    data: [],
+    loading: true,
+    error: null,
+  });
+
+  useEffect(() => {
+    const unsubscribe = subscribeToBanners(
+      (data) => setState({ data, loading: false, error: null }),
+      () => setState({ data: [], loading: false, error: GENERIC_ERROR }),
     );
     return () => unsubscribe();
   }, []);

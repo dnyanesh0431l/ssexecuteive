@@ -1,40 +1,50 @@
 // app/admin/brands/page.tsx
 "use client";
 
+import { Pencil, Plus, Shirt, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { Pencil, Plus, Search, Shirt, Trash2 } from "lucide-react";
 import { PageHeader } from "../../components/admin/PageHeader";
 import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
 import { ConfirmDialog } from "../../components/ui/ConfirmDialog";
 import { EmptyState } from "../../components/ui/EmptyState";
 import { ErrorState } from "../../components/ui/ErrorState";
-import { Input } from "../../components/ui/Input";
+import { Input, Select } from "../../components/ui/Input";
 import { TableSkeleton } from "../../components/ui/Skeleton";
 import { useToast } from "../../components/ui/Toast";
 import { deleteBrand } from "../../lib/firebase/brands";
-import { useBrands } from "../../lib/hooks/useCollectionData";
+import { useBrands, useCategories } from "../../lib/hooks/useCollectionData";
 import type { Brand } from "../../lib/types";
 import { formatDate, truncate } from "../../lib/utils";
 
 export default function BrandsPage() {
   const toast = useToast();
   const { data: brands, loading, error } = useBrands();
+  const categoriesState = useCategories();
   const [search, setSearch] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("");
   const [pendingDelete, setPendingDelete] = useState<Brand | null>(null);
   const [deleting, setDeleting] = useState(false);
 
+  const categoryMap = useMemo(() => {
+    const map = new Map<string, string>();
+    categoriesState.data.forEach((c) => map.set(c.id, c.name));
+    return map;
+  }, [categoriesState.data]);
+
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
-    if (!term) return brands;
-    return brands.filter(
-      (brand) =>
-        brand.name.toLowerCase().includes(term) ||
-        brand.slug.toLowerCase().includes(term) ||
-        brand.description.toLowerCase().includes(term)
-    );
-  }, [brands, search]);
+    return brands.filter((b) => {
+      if (categoryFilter && b.categoryId !== categoryFilter) return false;
+      if (!term) return true;
+      return (
+        b.name.toLowerCase().includes(term) ||
+        b.slug.toLowerCase().includes(term) ||
+        b.description.toLowerCase().includes(term)
+      );
+    });
+  }, [brands, search, categoryFilter]);
 
   const confirmDelete = async () => {
     if (!pendingDelete) return;
@@ -54,7 +64,7 @@ export default function BrandsPage() {
     <>
       <PageHeader
         title="Brands"
-        description="Every brand represents a product style, with its own colour variants."
+        description="Every brand belongs to a category and holds its own colours."
         actions={
           <Link href="/admin/brands/new">
             <Button icon={<Plus className="h-4 w-4" />}>Add brand</Button>
@@ -62,13 +72,25 @@ export default function BrandsPage() {
         }
       />
 
-      <div className="mb-4 max-w-sm">
+      <div className="mb-4 grid gap-3 sm:grid-cols-[1fr_240px]">
         <Input
-          placeholder="Search brands by name, slug or description…"
+          placeholder="Search brands…"
           value={search}
-          onChange={(event) => setSearch(event.target.value)}
+          onChange={(e) => setSearch(e.target.value)}
           aria-label="Search brands"
         />
+        <Select
+          value={categoryFilter}
+          onChange={(e) => setCategoryFilter(e.target.value)}
+          aria-label="Filter by category"
+        >
+          <option value="">All categories</option>
+          {categoriesState.data.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name}
+            </option>
+          ))}
+        </Select>
       </div>
 
       <Card className="overflow-hidden">
@@ -79,16 +101,27 @@ export default function BrandsPage() {
         ) : filtered.length === 0 ? (
           <EmptyState
             icon={<Shirt className="h-5 w-5" />}
-            title={search ? "No brands match your search" : "No brands yet"}
+            title={
+              search || categoryFilter
+                ? "No brands match your filters"
+                : "No brands yet"
+            }
             description={
-              search
-                ? "Try a different name, slug or keyword."
-                : "Create your first brand to begin building the SS Executive catalogue."
+              search || categoryFilter
+                ? "Try a different keyword or category."
+                : "Add your first brand to begin building the catalogue."
             }
             action={
-              search ? (
-                <Button variant="outline" size="sm" onClick={() => setSearch("")}>
-                  Clear search
+              search || categoryFilter ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setSearch("");
+                    setCategoryFilter("");
+                  }}
+                >
+                  Clear filters
                 </Button>
               ) : (
                 <Link href="/admin/brands/new">
@@ -101,7 +134,6 @@ export default function BrandsPage() {
           />
         ) : (
           <>
-            {/* Desktop table */}
             <div className="hidden md:block">
               <table className="w-full border-collapse text-left">
                 <thead>
@@ -110,7 +142,13 @@ export default function BrandsPage() {
                       Brand
                     </th>
                     <th className="px-5 py-3 text-[11px] font-medium uppercase tracking-[0.08em] text-black/45">
+                      Category
+                    </th>
+                    <th className="px-5 py-3 text-[11px] font-medium uppercase tracking-[0.08em] text-black/45">
                       Colours
+                    </th>
+                    <th className="px-5 py-3 text-[11px] font-medium uppercase tracking-[0.08em] text-black/45">
+                      Sizes
                     </th>
                     <th className="px-5 py-3 text-[11px] font-medium uppercase tracking-[0.08em] text-black/45">
                       Created
@@ -122,14 +160,17 @@ export default function BrandsPage() {
                 </thead>
                 <tbody className="divide-y divide-[#E5E5E5]">
                   {filtered.map((brand) => (
-                    <tr key={brand.id} className="transition-colors hover:bg-[#F6F6F6]">
+                    <tr
+                      key={brand.id}
+                      className="transition-colors hover:bg-[#F6F6F6]"
+                    >
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-4">
                           <span className="h-14 w-12 shrink-0 overflow-hidden rounded border border-[#E5E5E5] bg-[#F6F6F6]">
-                            {brand.image ? (
-                              // eslint-disable-next-line ../..next/next/no-img-element
+                            {brand.images[0] ? (
+                              // eslint-disable-next-line @next/next/no-img-element
                               <img
-                                src={brand.image}
+                                src={brand.images[0]}
                                 alt=""
                                 className="h-full w-full object-cover"
                               />
@@ -151,10 +192,19 @@ export default function BrandsPage() {
                           </div>
                         </div>
                       </td>
+                      <td className="px-5 py-4 align-top text-[13px] text-black/70">
+                        {categoryMap.get(brand.categoryId) ?? (
+                          <span className="text-black/35">—</span>
+                        )}
+                      </td>
                       <td className="px-5 py-4 align-top">
                         <span className="inline-flex items-center rounded-full border border-[#E5E5E5] bg-white px-2.5 py-0.5 text-[11px] font-medium text-black">
-                          {brand.colorCount} colour{brand.colorCount === 1 ? "" : "s"}
+                          {brand.colorCount} colour
+                          {brand.colorCount === 1 ? "" : "s"}
                         </span>
+                      </td>
+                      <td className="px-5 py-4 align-top text-[12px] text-black/60">
+                        {brand.sizes.join(" · ") || "—"}
                       </td>
                       <td className="px-5 py-4 align-top text-[13px] text-black/60">
                         {formatDate(brand.createdAt)}
@@ -187,16 +237,15 @@ export default function BrandsPage() {
               </table>
             </div>
 
-            {/* Mobile list */}
             <ul className="divide-y divide-[#E5E5E5] md:hidden">
               {filtered.map((brand) => (
                 <li key={brand.id} className="px-4 py-4">
                   <div className="flex gap-3">
                     <span className="h-16 w-14 shrink-0 overflow-hidden rounded border border-[#E5E5E5] bg-[#F6F6F6]">
-                      {brand.image ? (
-                        // eslint-disable-next-line ../..next/next/no-img-element
+                      {brand.images[0] ? (
+                        // eslint-disable-next-line @next/next/no-img-element
                         <img
-                          src={brand.image}
+                          src={brand.images[0]}
                           alt=""
                           className="h-full w-full object-cover"
                         />
@@ -217,8 +266,12 @@ export default function BrandsPage() {
                       </p>
                       <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-black/45">
                         <span className="rounded-full border border-[#E5E5E5] px-2 py-0.5 text-black">
-                          {brand.colorCount} colour{brand.colorCount === 1 ? "" : "s"}
+                          {brand.colorCount} colour
+                          {brand.colorCount === 1 ? "" : "s"}
                         </span>
+                        {categoryMap.get(brand.categoryId) ? (
+                          <span>{categoryMap.get(brand.categoryId)}</span>
+                        ) : null}
                         <span>{formatDate(brand.createdAt)}</span>
                       </div>
                     </div>

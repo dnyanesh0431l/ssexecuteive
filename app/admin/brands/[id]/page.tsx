@@ -1,10 +1,10 @@
 // app/admin/brands/[id]/page.tsx
 "use client";
 
-import Link from "next/link";
-import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
 import { ArrowLeft, Trash2 } from "lucide-react";
+import Link from "next/link";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { PageHeader } from "../../../components/admin/PageHeader";
 import { BrandForm } from "../../../components/admin/brands/BrandForm";
 import { ColorManager } from "../../../components/admin/brands/ColorManager";
@@ -14,7 +14,7 @@ import { ErrorState } from "../../../components/ui/ErrorState";
 import { Skeleton } from "../../../components/ui/Skeleton";
 import { useToast } from "../../../components/ui/Toast";
 import { deleteBrand, subscribeToBrand } from "../../../lib/firebase/brands";
-import { useRouter } from "next/navigation";
+import { useCategories } from "../../../lib/hooks/useCollectionData";
 import type { Brand } from "../../../lib/types";
 
 export default function EditBrandPage() {
@@ -22,6 +22,7 @@ export default function EditBrandPage() {
   const brandId = params?.id;
   const router = useRouter();
   const toast = useToast();
+  const categoriesState = useCategories();
 
   const [brand, setBrand] = useState<Brand | null>(null);
   const [loading, setLoading] = useState(true);
@@ -42,7 +43,7 @@ export default function EditBrandPage() {
       () => {
         setError("Could not load this brand.");
         setLoading(false);
-      }
+      },
     );
     return () => unsubscribe();
   }, [brandId]);
@@ -60,7 +61,7 @@ export default function EditBrandPage() {
     }
   };
 
-  if (loading) {
+  if (loading || categoriesState.loading) {
     return (
       <div className="space-y-6">
         <Skeleton className="h-8 w-48" />
@@ -116,7 +117,7 @@ export default function EditBrandPage() {
       />
 
       <div className="space-y-6">
-        <BrandForm brand={brand} />
+        <BrandForm brand={brand} categories={categoriesState.data} />
         <ColorManager brandId={brand.id} />
       </div>
 

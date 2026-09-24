@@ -1,17 +1,17 @@
 // components/admin/brands/ColorManager.tsx
 "use client";
 
-import { useEffect, useState } from "react";
 import { Pencil, Plus, Shirt, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
 import { Button } from "../../../components/ui/Button";
 import { ConfirmDialog } from "../../../components/ui/ConfirmDialog";
 import { EmptyState } from "../../../components/ui/EmptyState";
 import { ErrorState } from "../../../components/ui/ErrorState";
 import { Skeleton } from "../../../components/ui/Skeleton";
 import { useToast } from "../../../components/ui/Toast";
-import { ColorFormModal } from "./ColorFormModal";
 import { deleteColor, subscribeToColors } from "../../../lib/firebase/brands";
 import type { BrandColor } from "../../../lib/types";
+import { ColorFormModal } from "./ColorFormModal";
 
 export function ColorManager({ brandId }: { brandId: string }) {
   const toast = useToast();
@@ -35,7 +35,7 @@ export function ColorManager({ brandId }: { brandId: string }) {
       () => {
         setError("Could not load colours for this brand.");
         setLoading(false);
-      }
+      },
     );
     return () => unsubscribe();
   }, [brandId]);
@@ -45,7 +45,10 @@ export function ColorManager({ brandId }: { brandId: string }) {
     setDeleting(true);
     try {
       await deleteColor(brandId, pendingDelete.id);
-      toast.success("Colour deleted", `${pendingDelete.name} has been removed.`);
+      toast.success(
+        "Colour deleted",
+        `${pendingDelete.name} has been removed.`,
+      );
       setPendingDelete(null);
     } catch {
       toast.error("Could not delete colour", "Please try again.");
@@ -62,7 +65,7 @@ export function ColorManager({ brandId }: { brandId: string }) {
             Colours
           </h2>
           <p className="mt-0.5 text-[13px] text-black/50">
-            Each colour carries its own image and available size range.
+            Each colour carries its own hex code and image.
           </p>
         </div>
         <Button
@@ -99,7 +102,7 @@ export function ColorManager({ brandId }: { brandId: string }) {
         <EmptyState
           icon={<Shirt className="h-5 w-5" />}
           title="No colours yet"
-          description="Add the first colour variant for this brand, including its hex code, image and available sizes."
+          description="Add the first colour variant for this brand."
           action={
             <Button
               size="sm"
@@ -126,7 +129,7 @@ export function ColorManager({ brandId }: { brandId: string }) {
                 aria-hidden
               >
                 {color.image ? (
-                  // eslint-disable-next-line ../../..next/next/no-img-element
+                  // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={color.image}
                     alt=""
@@ -154,18 +157,12 @@ export function ColorManager({ brandId }: { brandId: string }) {
                     {color.code}
                   </span>
                 </div>
-                <p className="mt-1 truncate text-xs text-black/50">
-                  {color.availableSizes.length > 0
-                    ? color.availableSizes.join(" · ")
-                    : "No sizes assigned"}
-                </p>
               </div>
 
               <div className="flex shrink-0 items-center gap-1">
                 <Button
                   size="sm"
                   variant="ghost"
-                  aria-label={`Edit ${color.name}`}
                   icon={<Pencil className="h-3.5 w-3.5" />}
                   onClick={() => {
                     setEditing(color);
@@ -177,7 +174,6 @@ export function ColorManager({ brandId }: { brandId: string }) {
                 <Button
                   size="sm"
                   variant="ghost"
-                  aria-label={`Delete ${color.name}`}
                   className="text-[#B80A0B] hover:bg-[rgba(184,10,11,0.06)] hover:text-[#B80A0B]"
                   icon={<Trash2 className="h-3.5 w-3.5" />}
                   onClick={() => setPendingDelete(color)}
@@ -198,7 +194,7 @@ export function ColorManager({ brandId }: { brandId: string }) {
         onSaved={() =>
           toast.success(
             editing ? "Colour updated" : "Colour added",
-            "Changes are live immediately."
+            "Changes are live immediately.",
           )
         }
       />

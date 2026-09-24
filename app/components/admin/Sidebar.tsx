@@ -1,21 +1,21 @@
 // components/admin/Sidebar.tsx
 "use client";
 
+import { Images, LayoutDashboard, LogOut,Layers, Mail,ImageIcon, Shirt, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  Images,
-  LayoutDashboard,
-  LogOut,
-  Mail,
-  Shirt,
-  X,
-} from "lucide-react";
 import { cn } from "../../lib/utils";
 
 const NAV_ITEMS = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
+  {
+    href: "/admin/categories",
+    label: "Categories",
+    icon: Layers,
+    exact: false,
+  },
   { href: "/admin/brands", label: "Brands", icon: Shirt, exact: false },
+  { href: "/admin/banners", label: "Banners", icon: ImageIcon, exact: false },
   { href: "/admin/gallery", label: "Gallery", icon: Images, exact: false },
   {
     href: "/admin/contact-requests",
@@ -46,7 +46,11 @@ export function Sidebar({
   const content = (
     <div className="flex h-full flex-col bg-white">
       <div className="flex h-16 items-center justify-between border-b border-[#E5E5E5] px-5">
-        <Link href="/admin" className="flex items-center gap-2.5" onClick={onClose}>
+        <Link
+          href="/admin"
+          className="flex items-center gap-2.5"
+          onClick={onClose}
+        >
           <span className="flex h-8 w-8 items-center justify-center rounded-md bg-[#B80A0B] text-[12px] font-bold text-white">
             SS
           </span>
@@ -85,7 +89,7 @@ export function Sidebar({
                     "group relative flex items-center gap-3 rounded-md px-3 py-2.5 text-[13px] font-medium transition-colors",
                     active
                       ? "bg-[#F6F6F6] text-black"
-                      : "text-black/60 hover:bg-[#F6F6F6] hover:text-black"
+                      : "text-black/60 hover:bg-[#F6F6F6] hover:text-black",
                   )}
                 >
                   {active ? (
@@ -94,7 +98,9 @@ export function Sidebar({
                   <Icon
                     className={cn(
                       "h-4 w-4 shrink-0",
-                      active ? "text-[#B80A0B]" : "text-black/35 group-hover:text-black/55"
+                      active
+                        ? "text-[#B80A0B]"
+                        : "text-black/35 group-hover:text-black/55",
                     )}
                   />
                   {item.label}
@@ -107,7 +113,10 @@ export function Sidebar({
 
       <div className="border-t border-[#E5E5E5] p-3">
         {userEmail ? (
-          <p className="truncate px-2 pb-2 text-[11px] text-black/40" title={userEmail}>
+          <p
+            className="truncate px-2 pb-2 text-[11px] text-black/40"
+            title={userEmail}
+          >
             {userEmail}
           </p>
         ) : null}

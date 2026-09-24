@@ -7,7 +7,7 @@ import { ImageUploader } from "../../../components/ui/ImageUploader";
 import { Input } from "../../../components/ui/Input";
 import { Modal } from "../../../components/ui/Modal";
 import { createColor, updateColor } from "../../../lib/firebase/brands";
-import { SIZE_OPTIONS, type BrandColor } from "../../../lib/types";
+import type { BrandColor } from "../../../lib/types";
 import { cn, contrastText, isValidHex, normalizeHex } from "../../../lib/utils";
 
 interface ColorFormModalProps {
@@ -22,7 +22,6 @@ interface FormState {
   name: string;
   code: string;
   image: string;
-  availableSizes: string[];
 }
 
 interface FormErrors {
@@ -42,7 +41,6 @@ export function ColorFormModal({
     name: "",
     code: "#000000",
     image: "",
-    availableSizes: [],
   });
   const [errors, setErrors] = useState<FormErrors>({});
   const [saving, setSaving] = useState(false);
@@ -54,29 +52,17 @@ export function ColorFormModal({
       name: color?.name ?? "",
       code: color?.code ?? "#000000",
       image: color?.image ?? "",
-      availableSizes: color?.availableSizes ?? [],
     });
   }, [open, color]);
 
-  const toggleSize = (size: string) => {
-    setForm((prev) => ({
-      ...prev,
-      availableSizes: prev.availableSizes.includes(size)
-        ? prev.availableSizes.filter((item) => item !== size)
-        : [...prev.availableSizes, size],
-    }));
-  };
-
-  const onSubmit = async (event: React.FormEvent) => {
-    event.preventDefault();
-
-    const nextErrors: FormErrors = {};
-    if (!form.name.trim()) nextErrors.name = "Colour name is required.";
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const next: FormErrors = {};
+    if (!form.name.trim()) next.name = "Colour name is required.";
     if (!isValidHex(form.code))
-      nextErrors.code = "Enter a valid hex value, e.g. #1845D6.";
-
-    setErrors(nextErrors);
-    if (Object.keys(nextErrors).length > 0) return;
+      next.code = "Enter a valid hex value, e.g. #1845D6.";
+    setErrors(next);
+    if (Object.keys(next).length > 0) return;
 
     setSaving(true);
     try {
@@ -84,17 +70,9 @@ export function ColorFormModal({
         name: form.name.trim(),
         code: normalizeHex(form.code),
         image: form.image,
-        availableSizes: SIZE_OPTIONS.filter((size) =>
-          form.availableSizes.includes(size),
-        ),
       };
-
-      if (isEdit && color) {
-        await updateColor(brandId, color.id, payload);
-      } else {
-        await createColor(brandId, payload);
-      }
-
+      if (isEdit && color) await updateColor(brandId, color.id, payload);
+      else await createColor(brandId, payload);
       onSaved();
       onClose();
     } finally {
@@ -111,7 +89,7 @@ export function ColorFormModal({
       open={open}
       onClose={saving ? () => undefined : onClose}
       title={isEdit ? "Edit colour" : "Add colour"}
-      description="Colours and their available sizes are stored inside this brand."
+      description="Colours are stored inside this brand."
       size="lg"
       dismissible={!saving}
       footer={
@@ -133,9 +111,9 @@ export function ColorFormModal({
             placeholder="e.g. Navy Blue"
             value={form.name}
             error={errors.name}
-            onChange={(event) => {
-              setForm((prev) => ({ ...prev, name: event.target.value }));
-              setErrors((prev) => ({ ...prev, name: undefined }));
+            onChange={(e) => {
+              setForm((p) => ({ ...p, name: e.target.value }));
+              setErrors((p) => ({ ...p, name: undefined }));
             }}
           />
 
@@ -155,12 +133,12 @@ export function ColorFormModal({
               <input
                 id="color-code-text"
                 value={form.code}
-                onChange={(event) => {
-                  setForm((prev) => ({
-                    ...prev,
-                    code: event.target.value.toUpperCase(),
+                onChange={(e) => {
+                  setForm((p) => ({
+                    ...p,
+                    code: e.target.value.toUpperCase(),
                   }));
-                  setErrors((prev) => ({ ...prev, code: undefined }));
+                  setErrors((p) => ({ ...p, code: undefined }));
                 }}
                 placeholder="#1845D6"
                 className={cn(
@@ -177,12 +155,12 @@ export function ColorFormModal({
                 value={
                   isValidHex(form.code) ? normalizeHex(form.code) : "#000000"
                 }
-                onChange={(event) => {
-                  setForm((prev) => ({
-                    ...prev,
-                    code: event.target.value.toUpperCase(),
+                onChange={(e) => {
+                  setForm((p) => ({
+                    ...p,
+                    code: e.target.value.toUpperCase(),
                   }));
-                  setErrors((prev) => ({ ...prev, code: undefined }));
+                  setErrors((p) => ({ ...p, code: undefined }));
                 }}
                 className="h-10 w-10 shrink-0 cursor-pointer rounded-md border border-[#E5E5E5] bg-white p-1"
               />
@@ -195,44 +173,12 @@ export function ColorFormModal({
           </div>
         </div>
 
-        <div>
-          <span className="mb-1.5 block text-[13px] font-medium text-black">
-            Available sizes
-          </span>
-          <div className="flex flex-wrap gap-2">
-            {SIZE_OPTIONS.map((size) => {
-              const selected = form.availableSizes.includes(size);
-              return (
-                <button
-                  key={size}
-                  type="button"
-                  onClick={() => toggleSize(size)}
-                  aria-pressed={selected}
-                  className={cn(
-                    "h-9 min-w-[52px] rounded-md border px-3 text-[13px] font-medium transition-colors",
-                    selected
-                      ? "border-[#1845D6] bg-[rgba(24,69,214,0.06)] text-[#1845D6]"
-                      : "border-[#E5E5E5] bg-white text-black/60 hover:bg-[#F6F6F6]",
-                  )}
-                >
-                  {size}
-                </button>
-              );
-            })}
-          </div>
-          <p className="mt-2 text-xs text-black/45">
-            {form.availableSizes.length > 0
-              ? form.availableSizes.join(", ")
-              : "No sizes selected yet."}
-          </p>
-        </div>
-
         <ImageUploader
           label="Colour image"
           folder={`brands/${brandId}/colors`}
           value={form.image}
           hint="Shown on the product detail page for this colour."
-          onChange={(url) => setForm((prev) => ({ ...prev, image: url }))}
+          onChange={(url) => setForm((p) => ({ ...p, image: url }))}
         />
 
         <div

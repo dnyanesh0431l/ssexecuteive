@@ -1,12 +1,26 @@
 // lib/types.ts
 export type ContactStatus = "new" | "contacted" | "closed";
 
+export interface Category {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  image: string;
+  order: number;
+  brandCount: number;
+  createdAt: Date | null;
+  updatedAt: Date | null;
+}
+
 export interface Brand {
   id: string;
   name: string;
-  description: string;
-  image: string;
   slug: string;
+  description: string;
+  categoryId: string;
+  images: string[];
+  sizes: string[];
   colorCount: number;
   createdAt: Date | null;
   updatedAt: Date | null;
@@ -17,9 +31,19 @@ export interface BrandColor {
   name: string;
   code: string;
   image: string;
-  availableSizes: string[];
   createdAt: Date | null;
   updatedAt: Date | null;
+}
+
+export interface Banner {
+  id: string;
+  image: string;
+  title: string;
+  subtitle: string;
+  link: string;
+  order: number;
+  active: boolean;
+  createdAt: Date | null;
 }
 
 export interface GalleryImage {
