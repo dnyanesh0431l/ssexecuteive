@@ -1,7 +1,14 @@
 // app/(public)/brands/[slug]/[productSlug]/page.tsx
 "use client";
 
-import { ChevronRight, Phone, Share2, ShieldCheck, Truck } from "lucide-react";
+import {
+  Check,
+  ChevronRight,
+  Phone,
+  Share2,
+  ShieldCheck,
+  Truck,
+} from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -256,58 +263,27 @@ export default function ProductDetailPage() {
                 {product.name}
               </h1>
 
-              {/* ---------- Colour swatches (all colours) ---------- */}
-              {colors.length > 0 ? (
-                <div className="mt-5">
-                  <div className="flex items-baseline gap-2">
-                    <p className="text-[12px] font-bold uppercase tracking-widest text-black/55">
-                      Colour
-                    </p>
-                    <p className="text-[13px] font-medium text-[#1A2340]">
-                      {activeColor ? activeColor.name : "All available"}
-                    </p>
-                  </div>
-
-                  <div className="mt-3 flex flex-wrap gap-2.5">
-                    {colors.map((c) => {
-                      const selected = c.id === activeColorId;
-                      return (
-                        <button
-                          key={c.id}
-                          type="button"
-                          title={c.name}
-                          aria-label={c.name}
-                          onClick={() =>
-                            setActiveColorId(selected ? null : c.id)
-                          }
-                          className={cn(
-                            "relative h-10 w-10 rounded-full transition-all",
-                            selected
-                              ? "ring-2 ring-[#1845D6] ring-offset-2"
-                              : "ring-1 ring-black/10 hover:ring-black/30",
-                          )}
-                          style={{ backgroundColor: c.code }}
-                        >
-                          {selected ? (
-                            <span
-                              className="absolute inset-0 flex items-center justify-center text-[14px] font-bold"
-                              style={{
-                                color:
-                                  c.code === "#FFFFFF" ||
-                                  c.code === "#F1EDE5" ||
-                                  c.code === "#E8DDBE"
-                                    ? "#111111"
-                                    : "#FFFFFF",
-                              }}
-                            >
-                              ✓
-                            </span>
-                          ) : null}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
+              {/* ---------- Selected colour + size line ---------- */}
+              {activeColor || activeSize ? (
+                <p className="mt-3 text-[13px] text-black/60">
+                  {activeColor ? (
+                    <>
+                      Colour:{" "}
+                      <span className="font-medium text-[#1A2340]">
+                        {activeColor.name}
+                      </span>
+                    </>
+                  ) : null}
+                  {activeColor && activeSize ? " · " : null}
+                  {activeSize ? (
+                    <>
+                      Size:{" "}
+                      <span className="font-medium text-[#1A2340]">
+                        {activeSize}
+                      </span>
+                    </>
+                  ) : null}
+                </p>
               ) : null}
 
               {/* ---------- Size selector ---------- */}
@@ -365,7 +341,6 @@ export default function ProductDetailPage() {
                   rel="noreferrer"
                   className="flex items-center justify-center gap-2 bg-[#25D366] px-4 py-3 text-[13px] font-bold uppercase tracking-widest text-white shadow-sm transition-colors hover:bg-[#1FBE5B]"
                 >
-                  {/* WhatsApp glyph */}
                   <svg
                     viewBox="0 0 24 24"
                     className="h-4 w-4 fill-current"
@@ -412,6 +387,79 @@ export default function ProductDetailPage() {
             </div>
           </div>
         </section>
+
+        {/* ---------- Available Colours — product-card grid ---------- */}
+        {colors.length > 0 ? (
+          <section className="mt-3 bg-white shadow-sm">
+            <div className="flex items-center justify-between border-b border-[#F0F0F0] px-5 py-3.5 sm:px-6">
+              <h2 className="text-[15px] font-bold uppercase tracking-tight text-[#1A2340] sm:text-[17px]">
+                Available Colours
+              </h2>
+              <span className="text-[11px] font-medium uppercase tracking-widest text-black/45">
+                {colors.length} {colors.length === 1 ? "option" : "options"}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 divide-x divide-y divide-[#F0F0F0] sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+              {colors.map((c) => {
+                const selected = c.id === activeColorId;
+                return (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => {
+                      setActiveColorId(selected ? null : c.id);
+                      window.scrollTo({ top: 0, behavior: "smooth" });
+                    }}
+                    className={cn(
+                      "group relative flex flex-col p-4 text-left transition-colors",
+                      selected ? "bg-[#F8F9FB]" : "hover:bg-[#F8F9FB]",
+                    )}
+                  >
+                    {/* Selected tick */}
+                    {selected ? (
+                      <span className="absolute right-3 top-3 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-[#1845D6] text-white shadow-md">
+                        <Check className="h-3.5 w-3.5" strokeWidth={3} />
+                      </span>
+                    ) : null}
+
+                    {/* Colour swatch card */}
+                    <div className="relative aspect-square w-full overflow-hidden bg-[#F6F6F6]">
+                      {c.image ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={c.image}
+                          alt={c.name}
+                          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        />
+                      ) : (
+                        <span
+                          className="block h-full w-full"
+                          style={{ backgroundColor: c.code }}
+                        />
+                      )}
+                    </div>
+
+                    {/* Colour name + code */}
+                    <p
+                      className={cn(
+                        "mt-3 line-clamp-1 text-[13px] font-medium",
+                        selected
+                          ? "text-[#1845D6]"
+                          : "text-[#1A2340] group-hover:text-[#1845D6]",
+                      )}
+                    >
+                      {c.name}
+                    </p>
+                    <span className="mt-0.5 font-mono text-[10px] uppercase text-black/40">
+                      {c.code}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+        ) : null}
       </div>
     </div>
   );
