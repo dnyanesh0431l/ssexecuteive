@@ -9,9 +9,12 @@ const TITLES: Array<{ match: string; title: string }> = [
   { match: "/admin/categories", title: "Categories" },
   { match: "/admin/brands/new", title: "New Brand" },
   { match: "/admin/brands", title: "Brands" },
+  { match: "/admin/products/new", title: "New Product" },
+  { match: "/admin/products", title: "Products" },
   { match: "/admin/banners", title: "Banners" },
   { match: "/admin/gallery", title: "Gallery" },
   { match: "/admin/contact-requests", title: "Contact Requests" },
+  { match: "/admin/seed", title: "Seed Data" },
   { match: "/admin", title: "Dashboard" },
 ];
 

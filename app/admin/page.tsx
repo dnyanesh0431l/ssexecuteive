@@ -221,7 +221,7 @@ export default function AdminDashboardPage() {
                     className="flex items-center gap-4 px-5 py-3.5 transition-colors hover:bg-[#F6F6F6]"
                   >
                     <span className="h-12 w-10 shrink-0 overflow-hidden rounded border border-[#E5E5E5] bg-[#F6F6F6]">
-                      {brand.images[0] ? (
+                      {brand.images ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
                           src={brand.images[0]}

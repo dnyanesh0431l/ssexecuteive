@@ -14,18 +14,16 @@ import {
   query,
   serverTimestamp,
   updateDoc,
-  writeBatch,
   type DocumentData,
   type Unsubscribe,
 } from "firebase/firestore";
-import type { Brand, BrandColor } from "../types";
+import type { Brand } from "../types";
 import { incrementCategoryBrandCount } from "./categories";
 import { db } from "./config";
+import { deleteProduct } from "./products";
 import { deleteImageByUrl } from "./storage";
 
 const brandsRef = () => collection(db, "brands");
-const colorsRef = (brandId: string) =>
-  collection(db, "brands", brandId, "colors");
 
 function toDate(value: unknown): Date | null {
   if (!value) return null;
@@ -48,28 +46,12 @@ function mapBrand(id: string, data: DocumentData): Brand {
     slug: data.slug ?? "",
     description: data.description ?? "",
     categoryId: data.categoryId ?? "",
-    images: asStringArray(data.images),
-    sizes: asStringArray(data.sizes),
-    colorCount: typeof data.colorCount === "number" ? data.colorCount : 0,
+    bannerImages: asStringArray(data.bannerImages),
+    productCount: typeof data.productCount === "number" ? data.productCount : 0,
     createdAt: toDate(data.createdAt),
     updatedAt: toDate(data.updatedAt),
   };
 }
-
-function mapColor(id: string, data: DocumentData): BrandColor {
-  return {
-    id,
-    name: data.name ?? "",
-    code: data.code ?? "#000000",
-    image: data.image ?? "",
-    createdAt: toDate(data.createdAt),
-    updatedAt: toDate(data.updatedAt),
-  };
-}
-
-/* --------------------------------------------------------------- */
-/* Brands                                                           */
-/* --------------------------------------------------------------- */
 
 export function subscribeToBrands(
   onData: (brands: Brand[]) => void,
@@ -78,8 +60,8 @@ export function subscribeToBrands(
   const q = query(brandsRef(), orderBy("createdAt", "desc"));
   return onSnapshot(
     q,
-    (snapshot) => onData(snapshot.docs.map((d) => mapBrand(d.id, d.data()))),
-    (error) => onError?.(error),
+    (snap) => onData(snap.docs.map((d) => mapBrand(d.id, d.data()))),
+    (err) => onError?.(err),
   );
 }
 
@@ -90,9 +72,8 @@ export function subscribeToBrand(
 ): Unsubscribe {
   return onSnapshot(
     doc(db, "brands", brandId),
-    (snapshot) =>
-      onData(snapshot.exists() ? mapBrand(snapshot.id, snapshot.data()) : null),
-    (error) => onError?.(error),
+    (snap) => onData(snap.exists() ? mapBrand(snap.id, snap.data()) : null),
+    (err) => onError?.(err),
   );
 }
 
@@ -106,14 +87,13 @@ export interface BrandInput {
   slug: string;
   description: string;
   categoryId: string;
-  images: string[];
-  sizes: string[];
+  bannerImages: string[];
 }
 
 export async function createBrand(input: BrandInput): Promise<string> {
   const ref = await addDoc(brandsRef(), {
     ...input,
-    colorCount: 0,
+    productCount: 0,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   });
@@ -148,23 +128,21 @@ export async function updateBrand(
 export async function deleteBrand(brandId: string): Promise<void> {
   const imageUrls: string[] = [];
 
-  const colorsSnapshot = await getDocs(colorsRef(brandId));
-  if (!colorsSnapshot.empty) {
-    const batch = writeBatch(db);
-    colorsSnapshot.docs.forEach((c) => {
-      const image = c.data().image;
-      if (typeof image === "string" && image) imageUrls.push(image);
-      batch.delete(c.ref);
-    });
-    await batch.commit();
+  // Cascade delete products
+  const productsSnap = await getDocs(collection(db, "products"));
+  const productDocs = productsSnap.docs.filter(
+    (d) => d.data().brandId === brandId,
+  );
+  for (const p of productDocs) {
+    await deleteProduct(p.id);
   }
 
-  const brandSnap = await getDoc(doc(db, "brands", brandId));
+  const snap = await getDoc(doc(db, "brands", brandId));
   let prevCategory = "";
-  if (brandSnap.exists()) {
-    const data = brandSnap.data();
-    if (Array.isArray(data.images)) {
-      data.images.forEach((img: unknown) => {
+  if (snap.exists()) {
+    const data = snap.data();
+    if (Array.isArray(data.bannerImages)) {
+      data.bannerImages.forEach((img: unknown) => {
         if (typeof img === "string" && img) imageUrls.push(img);
       });
     }
@@ -177,70 +155,13 @@ export async function deleteBrand(brandId: string): Promise<void> {
   await Promise.all(imageUrls.map((url) => deleteImageByUrl(url)));
 }
 
-/* --------------------------------------------------------------- */
-/* Colors (brands/{brandId}/colors)                                 */
-/* --------------------------------------------------------------- */
-
-export function subscribeToColors(
+export async function incrementBrandProductCount(
   brandId: string,
-  onData: (colors: BrandColor[]) => void,
-  onError?: (error: Error) => void,
-): Unsubscribe {
-  const q = query(colorsRef(brandId), orderBy("createdAt", "asc"));
-  return onSnapshot(
-    q,
-    (snapshot) => onData(snapshot.docs.map((d) => mapColor(d.id, d.data()))),
-    (error) => onError?.(error),
-  );
-}
-
-export interface ColorInput {
-  name: string;
-  code: string;
-  image: string;
-}
-
-export async function createColor(
-  brandId: string,
-  input: ColorInput,
-): Promise<string> {
-  const ref = await addDoc(colorsRef(brandId), {
-    ...input,
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
-  });
-  await updateDoc(doc(db, "brands", brandId), {
-    colorCount: increment(1),
-    updatedAt: serverTimestamp(),
-  });
-  return ref.id;
-}
-
-export async function updateColor(
-  brandId: string,
-  colorId: string,
-  input: Partial<ColorInput>,
+  delta: number,
 ): Promise<void> {
-  await updateDoc(doc(db, "brands", brandId, "colors", colorId), {
-    ...input,
-    updatedAt: serverTimestamp(),
-  });
-  await updateDoc(doc(db, "brands", brandId), { updatedAt: serverTimestamp() });
-}
-
-export async function deleteColor(
-  brandId: string,
-  colorId: string,
-): Promise<void> {
-  const colorRef = doc(db, "brands", brandId, "colors", colorId);
-  const snap = await getDoc(colorRef);
-  const image = snap.exists() ? snap.data().image : null;
-
-  await deleteDoc(colorRef);
+  if (!brandId) return;
   await updateDoc(doc(db, "brands", brandId), {
-    colorCount: increment(-1),
+    productCount: increment(delta),
     updatedAt: serverTimestamp(),
   });
-
-  if (typeof image === "string") await deleteImageByUrl(image);
 }

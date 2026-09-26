@@ -33,7 +33,8 @@ export default function EditCategoryPage() {
   const [error, setError] = useState<string | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [pendingBrandDelete, setPendingBrandDelete] = useState<Brand | null>(null);
+  const [pendingBrandDelete, setPendingBrandDelete] =
+    useState<Brand | null>(null);
   const [deletingBrand, setDeletingBrand] = useState(false);
 
   const brandsState = useBrands();
@@ -41,7 +42,7 @@ export default function EditCategoryPage() {
   useEffect(() => {
     if (!categoryId) return;
     setLoading(true);
-    const unsubscribe = subscribeToCategory(
+    const unsub = subscribeToCategory(
       categoryId,
       (data) => {
         setCategory(data);
@@ -53,7 +54,7 @@ export default function EditCategoryPage() {
         setLoading(false);
       }
     );
-    return () => unsubscribe();
+    return () => unsub();
   }, [categoryId]);
 
   const categoryBrands = useMemo(
@@ -79,7 +80,10 @@ export default function EditCategoryPage() {
     setDeletingBrand(true);
     try {
       await deleteBrand(pendingBrandDelete.id);
-      toast.success("Brand deleted", `${pendingBrandDelete.name} has been removed.`);
+      toast.success(
+        "Brand deleted",
+        `${pendingBrandDelete.name} has been removed.`
+      );
       setPendingBrandDelete(null);
     } catch {
       toast.error("Could not delete brand", "Please try again.");
@@ -152,7 +156,7 @@ export default function EditCategoryPage() {
                 Brands in this category
               </h2>
               <p className="mt-0.5 text-[13px] text-black/50">
-                Add, edit or remove the brands shown on this category page.
+                Add, edit or remove brands shown on this category page.
               </p>
             </div>
             <Link href={`/admin/brands/new?categoryId=${category.id}`}>
@@ -173,7 +177,7 @@ export default function EditCategoryPage() {
                   key={i}
                   className="flex items-center gap-4 rounded-md border border-[#E5E5E5] p-3"
                 >
-                  <Skeleton className="h-14 w-14 rounded" />
+                  <Skeleton className="h-14 w-20 rounded" />
                   <div className="flex-1 space-y-2">
                     <Skeleton className="h-3.5 w-28" />
                     <Skeleton className="h-3 w-40" />
@@ -202,11 +206,11 @@ export default function EditCategoryPage() {
                   key={brand.id}
                   className="flex flex-wrap items-center gap-4 px-5 py-4 sm:flex-nowrap"
                 >
-                  <span className="h-14 w-14 shrink-0 overflow-hidden rounded border border-[#E5E5E5] bg-[#F6F6F6]">
-                    {brand.images[0] ? (
+                  <span className="h-14 w-20 shrink-0 overflow-hidden rounded border border-[#E5E5E5] bg-[#F6F6F6]">
+                    {brand.bannerImages[0] ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
-                        src={brand.images[0]}
+                        src={brand.bannerImages[0]}
                         alt=""
                         className="h-full w-full object-cover"
                       />
@@ -223,9 +227,8 @@ export default function EditCategoryPage() {
                       /{brand.slug}
                     </p>
                     <p className="mt-1 text-xs text-black/50">
-                      {brand.colorCount} colour
-                      {brand.colorCount === 1 ? "" : "s"} ·{" "}
-                      {brand.sizes.join(" · ") || "No sizes"}
+                      {brand.productCount} product
+                      {brand.productCount === 1 ? "" : "s"}
                     </p>
                   </div>
                   <span className="hidden shrink-0 text-[11px] text-black/40 md:block">
@@ -267,7 +270,7 @@ export default function EditCategoryPage() {
       <ConfirmDialog
         open={Boolean(pendingBrandDelete)}
         title={`Delete ${pendingBrandDelete?.name ?? "brand"}?`}
-        description="This removes the brand, all of its colours and every uploaded image."
+        description="This removes the brand, all its products, colours and every uploaded image."
         confirmLabel="Delete brand"
         loading={deletingBrand}
         onCancel={() => setPendingBrandDelete(null)}

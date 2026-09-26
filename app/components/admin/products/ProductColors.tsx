@@ -1,54 +1,54 @@
-// components/admin/brands/ColorManager.tsx
+// components/admin/products/ProductColors.tsx
 "use client";
 
-import { Pencil, Plus, Shirt, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { Pencil, Plus, Shirt, Trash2 } from "lucide-react";
 import { Button } from "../../../components/ui/Button";
 import { ConfirmDialog } from "../../../components/ui/ConfirmDialog";
 import { EmptyState } from "../../../components/ui/EmptyState";
 import { ErrorState } from "../../../components/ui/ErrorState";
 import { Skeleton } from "../../../components/ui/Skeleton";
 import { useToast } from "../../../components/ui/Toast";
-import { deleteColor, subscribeToColors } from "../../../lib/firebase/brands";
-import type { BrandColor } from "../../../lib/types";
 import { ColorFormModal } from "./ColorFormModal";
+import {
+  deleteProductColor,
+  subscribeToProductColors,
+} from "../../../lib/firebase/products";
+import type { ProductColor } from "../../../lib/types";
 
-export function ColorManager({ brandId }: { brandId: string }) {
+export function ProductColors({ productId }: { productId: string }) {
   const toast = useToast();
-  const [colors, setColors] = useState<BrandColor[]>([]);
+  const [colors, setColors] = useState<ProductColor[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
-  const [editing, setEditing] = useState<BrandColor | null>(null);
-  const [pendingDelete, setPendingDelete] = useState<BrandColor | null>(null);
+  const [editing, setEditing] = useState<ProductColor | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<ProductColor | null>(null);
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     setLoading(true);
-    const unsubscribe = subscribeToColors(
-      brandId,
+    const unsubscribe = subscribeToProductColors(
+      productId,
       (data) => {
         setColors(data);
         setLoading(false);
         setError(null);
       },
       () => {
-        setError("Could not load colours for this brand.");
+        setError("Could not load colours for this product.");
         setLoading(false);
-      },
+      }
     );
     return () => unsubscribe();
-  }, [brandId]);
+  }, [productId]);
 
   const confirmDelete = async () => {
     if (!pendingDelete) return;
     setDeleting(true);
     try {
-      await deleteColor(brandId, pendingDelete.id);
-      toast.success(
-        "Colour deleted",
-        `${pendingDelete.name} has been removed.`,
-      );
+      await deleteProductColor(productId, pendingDelete.id);
+      toast.success("Colour deleted", `${pendingDelete.name} has been removed.`);
       setPendingDelete(null);
     } catch {
       toast.error("Could not delete colour", "Please try again.");
@@ -65,7 +65,7 @@ export function ColorManager({ brandId }: { brandId: string }) {
             Colours
           </h2>
           <p className="mt-0.5 text-[13px] text-black/50">
-            Each colour carries its own hex code and image.
+            Each colour has its own hex code and image.
           </p>
         </div>
         <Button
@@ -102,7 +102,7 @@ export function ColorManager({ brandId }: { brandId: string }) {
         <EmptyState
           icon={<Shirt className="h-5 w-5" />}
           title="No colours yet"
-          description="Add the first colour variant for this brand."
+          description="Add the first colour variant for this product."
           action={
             <Button
               size="sm"
@@ -188,13 +188,13 @@ export function ColorManager({ brandId }: { brandId: string }) {
 
       <ColorFormModal
         open={modalOpen}
-        brandId={brandId}
+        productId={productId}
         color={editing}
         onClose={() => setModalOpen(false)}
         onSaved={() =>
           toast.success(
             editing ? "Colour updated" : "Colour added",
-            "Changes are live immediately.",
+            "Changes are live immediately."
           )
         }
       />

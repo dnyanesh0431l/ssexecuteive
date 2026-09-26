@@ -1,4 +1,4 @@
-// app/admin/brands/[id]/page.tsx
+// app/admin/products/[id]/page.tsx
 "use client";
 
 import Link from "next/link";
@@ -6,93 +6,90 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ArrowLeft, Trash2 } from "lucide-react";
 import { PageHeader } from "../../../components/admin/PageHeader";
-import { BrandForm } from "../../../components/admin/brands/BrandForm";
-import { ProductList } from "../../../components/admin/products/ProductList";
+import { ProductForm } from "../../../components/admin/products/ProductForm";
+import { ProductColors } from "../../../components/admin/products/ProductColors";
 import { Button } from "../../../components/ui/Button";
 import { ConfirmDialog } from "../../../components/ui/ConfirmDialog";
 import { ErrorState } from "../../../components/ui/ErrorState";
 import { Skeleton } from "../../../components/ui/Skeleton";
 import { useToast } from "../../../components/ui/Toast";
-import { deleteBrand, subscribeToBrand } from "../../../lib/firebase/brands";
 import {
-  useCategories,
-  useProducts,
-} from "../../../lib/hooks/useCollectionData";
-import type { Brand } from "../../../lib/types";
+  deleteProduct,
+  subscribeToProduct,
+} from "../../../lib/firebase/products";
+import { useBrands } from "../../../lib/hooks/useCollectionData";
+import type { Product } from "../../../lib/types";
 
-export default function EditBrandPage() {
+export default function EditProductPage() {
   const params = useParams<{ id: string }>();
-  const brandId = params?.id;
+  const productId = params?.id;
   const router = useRouter();
   const toast = useToast();
+  const brandsState = useBrands();
 
-  const categoriesState = useCategories();
-  const productsState = useProducts();
-
-  const [brand, setBrand] = useState<Brand | null>(null);
+  const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
-    if (!brandId) return;
+    if (!productId) return;
     setLoading(true);
-    const unsub = subscribeToBrand(
-      brandId,
+    const unsub = subscribeToProduct(
+      productId,
       (data) => {
-        setBrand(data);
+        setProduct(data);
         setLoading(false);
-        setError(data ? null : "This brand no longer exists.");
+        setError(data ? null : "This product no longer exists.");
       },
       () => {
-        setError("Could not load this brand.");
+        setError("Could not load this product.");
         setLoading(false);
       }
     );
     return () => unsub();
-  }, [brandId]);
+  }, [productId]);
+
+  const brand = product
+    ? brandsState.data.find((b) => b.id === product.brandId)
+    : null;
 
   const confirmDelete = async () => {
-    if (!brandId || !brand) return;
+    if (!productId || !product) return;
     setDeleting(true);
     try {
-      await deleteBrand(brandId);
-      toast.success("Brand deleted", `${brand.name} has been removed.`);
-      router.push("/admin/brands");
+      await deleteProduct(productId);
+      toast.success("Product deleted", `${product.name} has been removed.`);
+      router.push(brand ? `/admin/brands/${brand.id}` : "/admin/products");
     } catch {
-      toast.error("Could not delete brand", "Please try again.");
+      toast.error("Could not delete product", "Please try again.");
       setDeleting(false);
     }
   };
 
-  if (loading || categoriesState.loading) {
+  if (loading || brandsState.loading) {
     return (
       <div className="space-y-6">
         <Skeleton className="h-8 w-48" />
         <div className="rounded-lg border border-[#E5E5E5] p-5">
-          <div className="grid gap-5 sm:grid-cols-2">
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-24 w-full sm:col-span-2" />
-            <Skeleton className="h-56 w-full sm:col-span-2" />
-          </div>
+          <Skeleton className="h-56 w-full" />
         </div>
       </div>
     );
   }
 
-  if (error || !brand) {
+  if (error || !product || !brand) {
     return (
       <>
         <Link
-          href="/admin/brands"
+          href="/admin/products"
           className="mb-4 inline-flex items-center gap-1.5 text-[13px] font-medium text-[#1845D6] hover:opacity-75"
         >
-          <ArrowLeft className="h-3.5 w-3.5" /> Back to brands
+          <ArrowLeft className="h-3.5 w-3.5" /> Back to products
         </Link>
         <div className="rounded-lg border border-[#E5E5E5] bg-white">
-          <ErrorState message={error ?? "Brand not found."} />
+          <ErrorState message={error ?? "Product not found."} />
         </div>
       </>
     );
@@ -101,40 +98,36 @@ export default function EditBrandPage() {
   return (
     <>
       <Link
-        href="/admin/brands"
+        href={`/admin/brands/${brand.id}`}
         className="mb-4 inline-flex items-center gap-1.5 text-[13px] font-medium text-[#1845D6] hover:opacity-75"
       >
-        <ArrowLeft className="h-3.5 w-3.5" /> Back to brands
+        <ArrowLeft className="h-3.5 w-3.5" /> Back to {brand.name}
       </Link>
 
       <PageHeader
-        title={brand.name}
-        description={`/${brand.slug}`}
+        title={product.name}
+        description={`${brand.name} · /${product.slug}`}
         actions={
           <Button
             variant="danger"
             icon={<Trash2 className="h-4 w-4" />}
             onClick={() => setConfirmOpen(true)}
           >
-            Delete brand
+            Delete product
           </Button>
         }
       />
 
       <div className="space-y-6">
-        <BrandForm brand={brand} categories={categoriesState.data} />
-        <ProductList
-          brandId={brand.id}
-          products={productsState.data}
-          loading={productsState.loading}
-        />
+        <ProductForm product={product} brand={brand} />
+        <ProductColors productId={product.id} />
       </div>
 
       <ConfirmDialog
         open={confirmOpen}
-        title={`Delete ${brand.name}?`}
-        description="This removes the brand, all its products, colours and every uploaded image."
-        confirmLabel="Delete brand"
+        title={`Delete ${product.name}?`}
+        description="This removes the product, all its colours and every uploaded image."
+        confirmLabel="Delete product"
         loading={deleting}
         onCancel={() => setConfirmOpen(false)}
         onConfirm={confirmDelete}

@@ -7,12 +7,14 @@ import { subscribeToBrands } from "../firebase/brands";
 import { subscribeToCategories } from "../firebase/categories";
 import { subscribeToContactRequests } from "../firebase/contactRequests";
 import { subscribeToGallery } from "../firebase/gallery";
+import { subscribeToProducts } from "../firebase/products";
 import type {
   Banner,
   Brand,
   Category,
   ContactRequest,
   GalleryImage,
+  Product,
 } from "../types";
 
 interface State<T> {
@@ -24,92 +26,59 @@ interface State<T> {
 const GENERIC_ERROR =
   "Could not load data. Please check your connection and try again.";
 
-export function useBrands(): State<Brand[]> {
-  const [state, setState] = useState<State<Brand[]>>({
-    data: [],
-    loading: true,
-    error: null,
-  });
+function makeHook<T>(
+  subscribe: (
+    onData: (data: T) => void,
+    onError: (err: Error) => void,
+  ) => () => void,
+  empty: T,
+): () => State<T> {
+  return function useData(): State<T> {
+    const [state, setState] = useState<State<T>>({
+      data: empty,
+      loading: true,
+      error: null,
+    });
 
-  useEffect(() => {
-    const unsubscribe = subscribeToBrands(
-      (brands) => setState({ data: brands, loading: false, error: null }),
-      () => setState({ data: [], loading: false, error: GENERIC_ERROR }),
-    );
-    return () => unsubscribe();
-  }, []);
+    useEffect(() => {
+      const unsubscribe = subscribe(
+        (data) => setState({ data, loading: false, error: null }),
+        () => setState({ data: empty, loading: false, error: GENERIC_ERROR }),
+      );
+      return () => unsubscribe();
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
-  return state;
+    return state;
+  };
 }
 
-export function useGallery(): State<GalleryImage[]> {
-  const [state, setState] = useState<State<GalleryImage[]>>({
-    data: [],
-    loading: true,
-    error: null,
-  });
+export const useBrands = makeHook<Brand[]>(
+  (onData, onError) => subscribeToBrands(onData, (e) => onError(e)),
+  [],
+);
 
-  useEffect(() => {
-    const unsubscribe = subscribeToGallery(
-      (items) => setState({ data: items, loading: false, error: null }),
-      () => setState({ data: [], loading: false, error: GENERIC_ERROR }),
-    );
-    return () => unsubscribe();
-  }, []);
+export const useProducts = makeHook<Product[]>(
+  (onData, onError) => subscribeToProducts(onData, (e) => onError(e)),
+  [],
+);
 
-  return state;
-}
+export const useCategories = makeHook<Category[]>(
+  (onData, onError) => subscribeToCategories(onData, (e) => onError(e)),
+  [],
+);
 
-export function useContactRequests(): State<ContactRequest[]> {
-  const [state, setState] = useState<State<ContactRequest[]>>({
-    data: [],
-    loading: true,
-    error: null,
-  });
+export const useBanners = makeHook<Banner[]>(
+  (onData, onError) => subscribeToBanners(onData, (e) => onError(e)),
+  [],
+);
 
-  useEffect(() => {
-    const unsubscribe = subscribeToContactRequests(
-      (requests) => setState({ data: requests, loading: false, error: null }),
-      () => setState({ data: [], loading: false, error: GENERIC_ERROR }),
-    );
-    return () => unsubscribe();
-  }, []);
+export const useGallery = makeHook<GalleryImage[]>(
+  (onData, onError) => subscribeToGallery(onData, (e) => onError(e)),
+  [],
+);
 
-  return state;
-}
-
-export function useCategories(): State<Category[]> {
-  const [state, setState] = useState<State<Category[]>>({
-    data: [],
-    loading: true,
-    error: null,
-  });
-
-  useEffect(() => {
-    const unsubscribe = subscribeToCategories(
-      (data) => setState({ data, loading: false, error: null }),
-      () => setState({ data: [], loading: false, error: GENERIC_ERROR }),
-    );
-    return () => unsubscribe();
-  }, []);
-
-  return state;
-}
-
-export function useBanners(): State<Banner[]> {
-  const [state, setState] = useState<State<Banner[]>>({
-    data: [],
-    loading: true,
-    error: null,
-  });
-
-  useEffect(() => {
-    const unsubscribe = subscribeToBanners(
-      (data) => setState({ data, loading: false, error: null }),
-      () => setState({ data: [], loading: false, error: GENERIC_ERROR }),
-    );
-    return () => unsubscribe();
-  }, []);
-
-  return state;
-}
+export const useContactRequests = makeHook<ContactRequest[]>(
+  (onData, onError) => subscribeToContactRequests(onData, (e) => onError(e)),
+  [],
+);

@@ -1,9 +1,9 @@
-// app/admin/brands/page.tsx
+// app/admin/products/page.tsx
 "use client";
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { Pencil, Plus, Shirt, Trash2 } from "lucide-react";
+import { Package, Pencil, Plus, Trash2 } from "lucide-react";
 import { PageHeader } from "../../components/admin/PageHeader";
 import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
@@ -13,51 +13,62 @@ import { ErrorState } from "../../components/ui/ErrorState";
 import { Input, Select } from "../../components/ui/Input";
 import { TableSkeleton } from "../../components/ui/Skeleton";
 import { useToast } from "../../components/ui/Toast";
-import { deleteBrand } from "../../lib/firebase/brands";
+import { deleteProduct } from "../../lib/firebase/products";
 import {
   useBrands,
   useCategories,
+  useProducts,
 } from "../../lib/hooks/useCollectionData";
-import type { Brand } from "../../lib/types";
+import type { Product } from "../../lib/types";
 import { formatDate, truncate } from "../../lib/utils";
 
-export default function BrandsPage() {
+export default function ProductsPage() {
   const toast = useToast();
-  const { data: brands, loading, error } = useBrands();
+  const productsState = useProducts();
+  const brandsState = useBrands();
   const categoriesState = useCategories();
+
   const [search, setSearch] = useState("");
+  const [brandFilter, setBrandFilter] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
-  const [pendingDelete, setPendingDelete] = useState<Brand | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<Product | null>(null);
   const [deleting, setDeleting] = useState(false);
 
+  const brandMap = useMemo(() => {
+    const m = new Map<string, string>();
+    brandsState.data.forEach((b) => m.set(b.id, b.name));
+    return m;
+  }, [brandsState.data]);
+
   const categoryMap = useMemo(() => {
-    const map = new Map<string, string>();
-    categoriesState.data.forEach((c) => map.set(c.id, c.name));
-    return map;
+    const m = new Map<string, string>();
+    categoriesState.data.forEach((c) => m.set(c.id, c.name));
+    return m;
   }, [categoriesState.data]);
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
-    return brands.filter((b) => {
-      if (categoryFilter && b.categoryId !== categoryFilter) return false;
+    return productsState.data.filter((p) => {
+      if (brandFilter && p.brandId !== brandFilter) return false;
+      if (categoryFilter && p.categoryId !== categoryFilter) return false;
       if (!term) return true;
       return (
-        b.name.toLowerCase().includes(term) ||
-        b.slug.toLowerCase().includes(term) ||
-        b.description.toLowerCase().includes(term)
+        p.name.toLowerCase().includes(term) ||
+        p.slug.toLowerCase().includes(term) ||
+        p.description.toLowerCase().includes(term)
       );
     });
-  }, [brands, search, categoryFilter]);
+  }, [productsState.data, search, brandFilter, categoryFilter]);
 
   const confirmDelete = async () => {
     if (!pendingDelete) return;
     setDeleting(true);
     try {
-      await deleteBrand(pendingDelete.id);
-      toast.success("Brand deleted", `${pendingDelete.name} has been removed.`);
+      await deleteProduct(pendingDelete.id);
+      toast.success("Product deleted", `${pendingDelete.name} has been removed.`);
       setPendingDelete(null);
     } catch {
-      toast.error("Could not delete brand", "Please try again.");
+      toast.error("Could not delete product", "Please try again.");
     } finally {
       setDeleting(false);
     }
@@ -66,21 +77,21 @@ export default function BrandsPage() {
   return (
     <>
       <PageHeader
-        title="Brands"
-        description="Every brand belongs to a category and holds its own products."
+        title="Products"
+        description="Every product belongs to a brand and holds its own colours."
         actions={
-          <Link href="/admin/brands/new">
-            <Button icon={<Plus className="h-4 w-4" />}>Add brand</Button>
+          <Link href="/admin/products/new">
+            <Button icon={<Plus className="h-4 w-4" />}>Add product</Button>
           </Link>
         }
       />
 
-      <div className="mb-4 grid gap-3 sm:grid-cols-[1fr_240px]">
+      <div className="mb-4 grid gap-3 sm:grid-cols-3">
         <Input
-          placeholder="Search brands…"
+          placeholder="Search products…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          aria-label="Search brands"
+          aria-label="Search products"
         />
         <Select
           value={categoryFilter}
@@ -94,42 +105,55 @@ export default function BrandsPage() {
             </option>
           ))}
         </Select>
+        <Select
+          value={brandFilter}
+          onChange={(e) => setBrandFilter(e.target.value)}
+          aria-label="Filter by brand"
+        >
+          <option value="">All brands</option>
+          {brandsState.data.map((b) => (
+            <option key={b.id} value={b.id}>
+              {b.name}
+            </option>
+          ))}
+        </Select>
       </div>
 
       <Card className="overflow-hidden">
-        {loading ? (
+        {productsState.loading ? (
           <TableSkeleton rows={5} />
-        ) : error ? (
-          <ErrorState message={error} />
+        ) : productsState.error ? (
+          <ErrorState message={productsState.error} />
         ) : filtered.length === 0 ? (
           <EmptyState
-            icon={<Shirt className="h-5 w-5" />}
+            icon={<Package className="h-5 w-5" />}
             title={
-              search || categoryFilter
-                ? "No brands match your filters"
-                : "No brands yet"
+              search || brandFilter || categoryFilter
+                ? "No products match your filters"
+                : "No products yet"
             }
             description={
-              search || categoryFilter
-                ? "Try a different keyword or category."
-                : "Add your first brand to begin building the catalogue."
+              search || brandFilter || categoryFilter
+                ? "Try a different keyword or filter."
+                : "Add your first product to begin building the catalogue."
             }
             action={
-              search || categoryFilter ? (
+              search || brandFilter || categoryFilter ? (
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => {
                     setSearch("");
+                    setBrandFilter("");
                     setCategoryFilter("");
                   }}
                 >
                   Clear filters
                 </Button>
               ) : (
-                <Link href="/admin/brands/new">
+                <Link href="/admin/products/new">
                   <Button size="sm" icon={<Plus className="h-3.5 w-3.5" />}>
-                    Add brand
+                    Add product
                   </Button>
                 </Link>
               )
@@ -142,13 +166,19 @@ export default function BrandsPage() {
                 <thead>
                   <tr className="border-b border-[#E5E5E5] bg-[#F6F6F6]">
                     <th className="px-5 py-3 text-[11px] font-medium uppercase tracking-[0.08em] text-black/45">
-                      Brand
+                      Product
                     </th>
                     <th className="px-5 py-3 text-[11px] font-medium uppercase tracking-[0.08em] text-black/45">
                       Category
                     </th>
                     <th className="px-5 py-3 text-[11px] font-medium uppercase tracking-[0.08em] text-black/45">
-                      Products
+                      Brand
+                    </th>
+                    <th className="px-5 py-3 text-[11px] font-medium uppercase tracking-[0.08em] text-black/45">
+                      Colours
+                    </th>
+                    <th className="px-5 py-3 text-[11px] font-medium uppercase tracking-[0.08em] text-black/45">
+                      Sizes
                     </th>
                     <th className="px-5 py-3 text-[11px] font-medium uppercase tracking-[0.08em] text-black/45">
                       Created
@@ -159,18 +189,18 @@ export default function BrandsPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#E5E5E5]">
-                  {filtered.map((brand) => (
+                  {filtered.map((product) => (
                     <tr
-                      key={brand.id}
+                      key={product.id}
                       className="transition-colors hover:bg-[#F6F6F6]"
                     >
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-4">
-                          <span className="h-14 w-16 shrink-0 overflow-hidden rounded border border-[#E5E5E5] bg-[#F6F6F6]">
-                            {brand.bannerImages[0] ? (
+                          <span className="h-12 w-12 shrink-0 overflow-hidden rounded border border-[#E5E5E5] bg-[#F6F6F6]">
+                            {product.images[0] ? (
                               // eslint-disable-next-line @next/next/no-img-element
                               <img
-                                src={brand.bannerImages[0]}
+                                src={product.images[0]}
                                 alt=""
                                 className="h-full w-full object-cover"
                               />
@@ -178,37 +208,40 @@ export default function BrandsPage() {
                           </span>
                           <div className="min-w-0">
                             <Link
-                              href={`/admin/brands/${brand.id}`}
+                              href={`/admin/products/${product.id}`}
                               className="text-[13px] font-medium text-black hover:text-[#1845D6]"
                             >
-                              {brand.name}
+                              {product.name}
                             </Link>
                             <p className="mt-0.5 font-mono text-[11px] text-black/40">
-                              /{brand.slug}
+                              /{product.slug}
                             </p>
                             <p className="mt-1 max-w-md text-xs leading-5 text-black/50">
-                              {truncate(brand.description, 80)}
+                              {truncate(product.description, 72)}
                             </p>
                           </div>
                         </div>
                       </td>
-                      <td className="px-5 py-4 align-top text-[13px] text-black/70">
-                        {categoryMap.get(brand.categoryId) ?? (
-                          <span className="text-black/35">—</span>
-                        )}
+                      <td className="px-5 py-4 align-top text-[12px] text-black/60">
+                        {categoryMap.get(product.categoryId) ?? "—"}
+                      </td>
+                      <td className="px-5 py-4 align-top text-[12px] text-black/60">
+                        {brandMap.get(product.brandId) ?? "—"}
                       </td>
                       <td className="px-5 py-4 align-top">
                         <span className="inline-flex items-center rounded-full border border-[#E5E5E5] bg-white px-2.5 py-0.5 text-[11px] font-medium text-black">
-                          {brand.productCount} product
-                          {brand.productCount === 1 ? "" : "s"}
+                          {product.colorCount}
                         </span>
                       </td>
-                      <td className="px-5 py-4 align-top text-[13px] text-black/60">
-                        {formatDate(brand.createdAt)}
+                      <td className="px-5 py-4 align-top text-[12px] text-black/60">
+                        {product.sizes.join(" · ") || "—"}
+                      </td>
+                      <td className="px-5 py-4 align-top text-[12px] text-black/60">
+                        {formatDate(product.createdAt)}
                       </td>
                       <td className="px-5 py-4 align-top">
                         <div className="flex items-center justify-end gap-1">
-                          <Link href={`/admin/brands/${brand.id}`}>
+                          <Link href={`/admin/products/${product.id}`}>
                             <Button
                               size="sm"
                               variant="ghost"
@@ -222,7 +255,7 @@ export default function BrandsPage() {
                             variant="ghost"
                             className="text-[#B80A0B] hover:bg-[rgba(184,10,11,0.06)] hover:text-[#B80A0B]"
                             icon={<Trash2 className="h-3.5 w-3.5" />}
-                            onClick={() => setPendingDelete(brand)}
+                            onClick={() => setPendingDelete(product)}
                           >
                             Delete
                           </Button>
@@ -235,14 +268,14 @@ export default function BrandsPage() {
             </div>
 
             <ul className="divide-y divide-[#E5E5E5] md:hidden">
-              {filtered.map((brand) => (
-                <li key={brand.id} className="px-4 py-4">
+              {filtered.map((product) => (
+                <li key={product.id} className="px-4 py-4">
                   <div className="flex gap-3">
-                    <span className="h-16 w-20 shrink-0 overflow-hidden rounded border border-[#E5E5E5] bg-[#F6F6F6]">
-                      {brand.bannerImages[0] ? (
+                    <span className="h-14 w-14 shrink-0 overflow-hidden rounded border border-[#E5E5E5] bg-[#F6F6F6]">
+                      {product.images[0] ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
-                          src={brand.bannerImages[0]}
+                          src={product.images[0]}
                           alt=""
                           className="h-full w-full object-cover"
                         />
@@ -250,30 +283,19 @@ export default function BrandsPage() {
                     </span>
                     <div className="min-w-0 flex-1">
                       <Link
-                        href={`/admin/brands/${brand.id}`}
+                        href={`/admin/products/${product.id}`}
                         className="text-[13px] font-medium text-black"
                       >
-                        {brand.name}
+                        {product.name}
                       </Link>
-                      <p className="mt-0.5 font-mono text-[11px] text-black/40">
-                        /{brand.slug}
+                      <p className="mt-0.5 text-xs text-black/50">
+                        {brandMap.get(product.brandId) ?? "—"} ·{" "}
+                        {categoryMap.get(product.categoryId) ?? "—"}
                       </p>
-                      <p className="mt-1 text-xs leading-5 text-black/50">
-                        {truncate(brand.description, 70)}
-                      </p>
-                      <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-black/45">
-                        <span className="rounded-full border border-[#E5E5E5] px-2 py-0.5 text-black">
-                          {brand.productCount} product
-                          {brand.productCount === 1 ? "" : "s"}
-                        </span>
-                        {categoryMap.get(brand.categoryId) ? (
-                          <span>{categoryMap.get(brand.categoryId)}</span>
-                        ) : null}
-                      </div>
                     </div>
                   </div>
                   <div className="mt-3 flex items-center gap-2">
-                    <Link href={`/admin/brands/${brand.id}`} className="flex-1">
+                    <Link href={`/admin/products/${product.id}`} className="flex-1">
                       <Button
                         size="sm"
                         variant="outline"
@@ -286,7 +308,7 @@ export default function BrandsPage() {
                     <Button
                       size="sm"
                       variant="danger"
-                      onClick={() => setPendingDelete(brand)}
+                      onClick={() => setPendingDelete(product)}
                       icon={<Trash2 className="h-3.5 w-3.5" />}
                     >
                       Delete
@@ -301,9 +323,9 @@ export default function BrandsPage() {
 
       <ConfirmDialog
         open={Boolean(pendingDelete)}
-        title={`Delete ${pendingDelete?.name ?? "brand"}?`}
-        description="This removes the brand, all its products, colours and every uploaded image."
-        confirmLabel="Delete brand"
+        title={`Delete ${pendingDelete?.name ?? "product"}?`}
+        description="This removes the product, all its colours and every uploaded image."
+        confirmLabel="Delete product"
         loading={deleting}
         onCancel={() => setPendingDelete(null)}
         onConfirm={confirmDelete}

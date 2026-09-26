@@ -17,39 +17,37 @@ import { Card, CardBody, CardHeader } from "../../components/ui/Card";
 import { useToast } from "../../components/ui/Toast";
 import type { BannerInput } from "../../lib/firebase/banners";
 import { createBanner } from "../../lib/firebase/banners";
-import type { BrandInput, ColorInput } from "../../lib/firebase/brands";
-import { createBrand, createColor } from "../../lib/firebase/brands";
+import type { BrandInput } from "../../lib/firebase/brands";
+import { createBrand } from "../../lib/firebase/brands";
 import type { CategoryInput } from "../../lib/firebase/categories";
 import { createCategory } from "../../lib/firebase/categories";
 import { db } from "../../lib/firebase/config";
 import type { GalleryInput } from "../../lib/firebase/gallery";
 import { createGalleryImage } from "../../lib/firebase/gallery";
-
-/* ------------------------------------------------------------------ */
-/* Image helper — picsum is reliable and never 404s                     */
-/* ------------------------------------------------------------------ */
+import type { ColorInput, ProductInput } from "../../lib/firebase/products";
+import { createProduct, createProductColor } from "../../lib/firebase/products";
 
 const img = (seed: string, w = 800, h = 800) =>
   `https://picsum.photos/seed/${encodeURIComponent(seed)}/${w}/${h}`;
-
-/* ------------------------------------------------------------------ */
-/* Mock data                                                            */
-/* ------------------------------------------------------------------ */
 
 interface MockColor {
   name: string;
   code: string;
 }
-
-interface MockBrand {
+interface MockProduct {
   name: string;
   slug: string;
   description: string;
   sizes: string[];
-  imageCount: number;
   colors: MockColor[];
 }
-
+interface MockBrand {
+  name: string;
+  slug: string;
+  description: string;
+  bannerCount: number;
+  products: MockProduct[];
+}
 interface MockCategory {
   name: string;
   slug: string;
@@ -67,66 +65,87 @@ const CATEGORIES: MockCategory[] = [
       {
         name: "US-POLO",
         slug: "us-polo",
-        description:
-          "Classic crew-neck tee in 180 GSM combed cotton. Pre-shrunk and colourfast.",
-        sizes: ["S", "M", "L", "XL", "XXL"],
-        imageCount: 2,
-        colors: [
-          { name: "Z-Black", code: "#111111" },
-          { name: "White", code: "#FFFFFF" },
-          { name: "Navy", code: "#1B2A4A" },
-          { name: "Brown", code: "#7B4A2D" },
+        description: "Classic crew-neck tees in combed cotton.",
+        bannerCount: 2,
+        products: [
+          {
+            name: "US-RWI36",
+            slug: "us-rwi36",
+            description:
+              "180 GSM combed cotton crew-neck tee. Pre-shrunk and colourfast.",
+            sizes: ["S", "M", "L", "XL", "XXL"],
+            colors: [
+              { name: "Z-Black", code: "#111111" },
+              { name: "White", code: "#FFFFFF" },
+              { name: "Navy", code: "#1B2A4A" },
+              { name: "Brown", code: "#7B4A2D" },
+            ],
+          },
+          {
+            name: "US-RWI42",
+            slug: "us-rwi42",
+            description: "Heavyweight 220 GSM tee with dropped shoulders.",
+            sizes: ["M", "L", "XL", "XXL"],
+            colors: [
+              { name: "Black", code: "#111111" },
+              { name: "Sand", code: "#D8C3A5" },
+            ],
+          },
         ],
       },
       {
         name: "RUFTY",
         slug: "rufty",
-        description:
-          "Relaxed-fit heavyweight tee. 220 GSM ring-spun cotton with vintage wash.",
-        sizes: ["M", "L", "XL", "XXL"],
-        imageCount: 2,
-        colors: [
-          { name: "Charcoal", code: "#3A3A3A" },
-          { name: "Sand", code: "#D8C3A5" },
-          { name: "Olive", code: "#5A6B3B" },
+        description: "Relaxed-fit heavyweight tees.",
+        bannerCount: 2,
+        products: [
+          {
+            name: "Vintage Wash",
+            slug: "vintage-wash",
+            description: "Vintage washed heavyweight tee.",
+            sizes: ["M", "L", "XL"],
+            colors: [
+              { name: "Charcoal", code: "#3A3A3A" },
+              { name: "Olive", code: "#5A6B3B" },
+            ],
+          },
         ],
       },
       {
         name: "Classic Crew",
         slug: "classic-crew",
-        description:
-          "Timeless everyday tee with a clean silhouette and reinforced neckline.",
-        sizes: ["S", "M", "L", "XL"],
-        imageCount: 2,
-        colors: [
-          { name: "White", code: "#FFFFFF" },
-          { name: "Black", code: "#111111" },
-          { name: "Heather Grey", code: "#9A9A9A" },
-        ],
-      },
-      {
-        name: "Essential Tee",
-        slug: "essential-tee",
-        description:
-          "Soft-touch staple tee with a modern regular fit and side-seam construction.",
-        sizes: ["S", "M", "L", "XL", "XXL"],
-        imageCount: 2,
-        colors: [
-          { name: "Navy", code: "#1B2A4A" },
-          { name: "White", code: "#FFFFFF" },
-          { name: "Maroon", code: "#6B1F2A" },
-          { name: "Forest", code: "#2F4A34" },
+        description: "Everyday crew-neck staples.",
+        bannerCount: 2,
+        products: [
+          {
+            name: "Regular Fit",
+            slug: "regular-fit",
+            description: "Regular fit tee with reinforced neckline.",
+            sizes: ["S", "M", "L", "XL"],
+            colors: [
+              { name: "White", code: "#FFFFFF" },
+              { name: "Black", code: "#111111" },
+              { name: "Heather Grey", code: "#9A9A9A" },
+            ],
+          },
         ],
       },
       {
         name: "Streetwear Co",
         slug: "streetwear-co",
-        description: "Boxy-fit drop-shoulder tee for a bold streetwear look.",
-        sizes: ["M", "L", "XL"],
-        imageCount: 2,
-        colors: [
-          { name: "Black", code: "#111111" },
-          { name: "Off White", code: "#F1EDE5" },
+        description: "Boxy-fit streetwear tees.",
+        bannerCount: 2,
+        products: [
+          {
+            name: "Boxy Tee",
+            slug: "boxy-tee",
+            description: "Boxy-fit drop-shoulder tee.",
+            sizes: ["M", "L", "XL"],
+            colors: [
+              { name: "Black", code: "#111111" },
+              { name: "Off White", code: "#F1EDE5" },
+            ],
+          },
         ],
       },
     ],
@@ -134,59 +153,62 @@ const CATEGORIES: MockCategory[] = [
   {
     name: "Polo Shirts",
     slug: "polo-shirts",
-    description:
-      "Smart-casual polos with pique cotton and clean tailoring — perfect for uniforms.",
+    description: "Smart-casual polos with pique cotton and clean tailoring.",
     brands: [
       {
         name: "Executive Polo",
         slug: "executive-polo",
-        description:
-          "Refined pique polo with tipped collar and mother-of-pearl buttons.",
-        sizes: ["S", "M", "L", "XL", "XXL"],
-        imageCount: 2,
-        colors: [
-          { name: "Navy", code: "#1B2A4A" },
-          { name: "White", code: "#FFFFFF" },
-          { name: "Sky Blue", code: "#8FB4D9" },
-          { name: "Black", code: "#111111" },
-        ],
-      },
-      {
-        name: "Signature Polo",
-        slug: "signature-polo",
-        description: "Combed cotton polo with a subtle sheen and tailored fit.",
-        sizes: ["M", "L", "XL"],
-        imageCount: 2,
-        colors: [
-          { name: "Burgundy", code: "#5A1A28" },
-          { name: "White", code: "#FFFFFF" },
-          { name: "Grey", code: "#7E7E7E" },
+        description: "Refined pique polos.",
+        bannerCount: 2,
+        products: [
+          {
+            name: "Tipped Collar",
+            slug: "tipped-collar",
+            description: "Pique polo with tipped collar.",
+            sizes: ["S", "M", "L", "XL", "XXL"],
+            colors: [
+              { name: "Navy", code: "#1B2A4A" },
+              { name: "White", code: "#FFFFFF" },
+              { name: "Sky Blue", code: "#8FB4D9" },
+            ],
+          },
         ],
       },
       {
         name: "Court Polo",
         slug: "court-polo",
-        description:
-          "Sport-inspired polo with contrast placket and breathable mesh back.",
-        sizes: ["S", "M", "L", "XL"],
-        imageCount: 2,
-        colors: [
-          { name: "White", code: "#FFFFFF" },
-          { name: "Navy", code: "#1B2A4A" },
-          { name: "Green", code: "#2F6B3B" },
+        description: "Sport-inspired polos.",
+        bannerCount: 2,
+        products: [
+          {
+            name: "Mesh Back",
+            slug: "mesh-back",
+            description: "Sport polo with contrast placket.",
+            sizes: ["S", "M", "L", "XL"],
+            colors: [
+              { name: "White", code: "#FFFFFF" },
+              { name: "Navy", code: "#1B2A4A" },
+              { name: "Green", code: "#2F6B3B" },
+            ],
+          },
         ],
       },
       {
         name: "Heritage Polo",
         slug: "heritage-polo",
-        description:
-          "Vintage-inspired polo in heavy pique with a lived-in softness.",
-        sizes: ["M", "L", "XL", "XXL"],
-        imageCount: 2,
-        colors: [
-          { name: "Beige", code: "#C9B48F" },
-          { name: "Brown", code: "#5B3A24" },
-          { name: "Navy", code: "#1B2A4A" },
+        description: "Vintage-inspired polos.",
+        bannerCount: 2,
+        products: [
+          {
+            name: "Heavy Pique",
+            slug: "heavy-pique",
+            description: "Heavy pique polo with lived-in softness.",
+            sizes: ["M", "L", "XL", "XXL"],
+            colors: [
+              { name: "Beige", code: "#C9B48F" },
+              { name: "Brown", code: "#5B3A24" },
+            ],
+          },
         ],
       },
     ],
@@ -200,51 +222,73 @@ const CATEGORIES: MockCategory[] = [
       {
         name: "Chef Pro",
         slug: "chef-pro",
-        description:
-          "Professional chef apron with stain-resistant finish and reinforced stitching.",
-        sizes: ["M", "L", "XL"],
-        imageCount: 2,
-        colors: [
-          { name: "Black", code: "#111111" },
-          { name: "White", code: "#FFFFFF" },
-          { name: "Grey", code: "#7E7E7E" },
+        description: "Professional chef aprons.",
+        bannerCount: 2,
+        products: [
+          {
+            name: "Stain-Resist",
+            slug: "stain-resist",
+            description: "Stain-resistant chef apron.",
+            sizes: ["M", "L", "XL"],
+            colors: [
+              { name: "Black", code: "#111111" },
+              { name: "White", code: "#FFFFFF" },
+            ],
+          },
         ],
       },
       {
         name: "Bistro Apron",
         slug: "bistro-apron",
-        description:
-          "Half-length bistro apron with twin front pockets and a wide waist tie.",
-        sizes: ["M", "L"],
-        imageCount: 2,
-        colors: [
-          { name: "Black", code: "#111111" },
-          { name: "Navy", code: "#1B2A4A" },
+        description: "Half-length bistro aprons.",
+        bannerCount: 2,
+        products: [
+          {
+            name: "Half Length",
+            slug: "half-length",
+            description: "Twin-pocket bistro apron.",
+            sizes: ["M", "L"],
+            colors: [
+              { name: "Black", code: "#111111" },
+              { name: "Navy", code: "#1B2A4A" },
+            ],
+          },
         ],
       },
       {
         name: "Workshop Apron",
         slug: "workshop-apron",
-        description:
-          "Heavy-duty canvas apron with cross-back straps and tool loops.",
-        sizes: ["M", "L", "XL"],
-        imageCount: 2,
-        colors: [
-          { name: "Khaki", code: "#B8A47A" },
-          { name: "Black", code: "#111111" },
-          { name: "Brown", code: "#5B3A24" },
+        description: "Heavy-duty canvas aprons.",
+        bannerCount: 2,
+        products: [
+          {
+            name: "Canvas Pro",
+            slug: "canvas-pro",
+            description: "Cross-back canvas apron.",
+            sizes: ["M", "L", "XL"],
+            colors: [
+              { name: "Khaki", code: "#B8A47A" },
+              { name: "Black", code: "#111111" },
+            ],
+          },
         ],
       },
       {
         name: "Canvas Apron",
         slug: "canvas-apron",
-        description:
-          "Everyday canvas apron with adjustable neck strap and double front pockets.",
-        sizes: ["M", "L", "XL"],
-        imageCount: 2,
-        colors: [
-          { name: "Natural", code: "#E8DDBE" },
-          { name: "Olive", code: "#5A6B3B" },
+        description: "Everyday canvas aprons.",
+        bannerCount: 2,
+        products: [
+          {
+            name: "Everyday",
+            slug: "everyday",
+            description: "Everyday canvas apron.",
+            sizes: ["M", "L", "XL"],
+            colors: [
+              { name: "Natural", code: "#E8DDBE" },
+              { name: "Olive", code: "#5A6B3B" },
+            ],
+          },
         ],
       },
     ],
@@ -252,74 +296,79 @@ const CATEGORIES: MockCategory[] = [
   {
     name: "Hoodies",
     slug: "hoodies",
-    description:
-      "Warm, heavyweight hoodies in brushed fleece — built for comfort and layering.",
+    description: "Warm, heavyweight hoodies in brushed fleece.",
     brands: [
       {
         name: "Fleece Hoodie",
         slug: "fleece-hoodie",
-        description:
-          "320 GSM brushed fleece hoodie with kangaroo pocket and double-lined hood.",
-        sizes: ["S", "M", "L", "XL", "XXL"],
-        imageCount: 2,
-        colors: [
-          { name: "Black", code: "#111111" },
-          { name: "Grey", code: "#7E7E7E" },
-          { name: "Navy", code: "#1B2A4A" },
-          { name: "Maroon", code: "#6B1F2A" },
+        description: "320 GSM brushed fleece hoodies.",
+        bannerCount: 2,
+        products: [
+          {
+            name: "Classic Pullover",
+            slug: "classic-pullover",
+            description: "Classic kangaroo-pocket hoodie.",
+            sizes: ["S", "M", "L", "XL", "XXL"],
+            colors: [
+              { name: "Black", code: "#111111" },
+              { name: "Grey", code: "#7E7E7E" },
+              { name: "Navy", code: "#1B2A4A" },
+            ],
+          },
         ],
       },
       {
         name: "Zip-Up Classic",
         slug: "zip-up-classic",
-        description:
-          "Full-zip hoodie with metal zipper, ribbed cuffs and split kangaroo pockets.",
-        sizes: ["M", "L", "XL", "XXL"],
-        imageCount: 2,
-        colors: [
-          { name: "Black", code: "#111111" },
-          { name: "Navy", code: "#1B2A4A" },
-          { name: "Grey", code: "#7E7E7E" },
+        description: "Full-zip hoodies.",
+        bannerCount: 2,
+        products: [
+          {
+            name: "Full Zip",
+            slug: "full-zip",
+            description: "Metal zip hoodie with ribbed cuffs.",
+            sizes: ["M", "L", "XL"],
+            colors: [
+              { name: "Black", code: "#111111" },
+              { name: "Navy", code: "#1B2A4A" },
+            ],
+          },
         ],
       },
       {
         name: "Oversized Hoodie",
         slug: "oversized-hoodie",
-        description:
-          "Boxy oversized hoodie with dropped shoulders and premium heavyweight fleece.",
-        sizes: ["M", "L", "XL"],
-        imageCount: 2,
-        colors: [
-          { name: "Cream", code: "#F1EDE5" },
-          { name: "Black", code: "#111111" },
-          { name: "Olive", code: "#5A6B3B" },
-          { name: "Brown", code: "#5B3A24" },
-        ],
-      },
-      {
-        name: "Tech Fleece",
-        slug: "tech-fleece",
-        description:
-          "Technical fleece hoodie with moisture-wicking lining and bonded seams.",
-        sizes: ["S", "M", "L", "XL"],
-        imageCount: 2,
-        colors: [
-          { name: "Black", code: "#111111" },
-          { name: "Charcoal", code: "#3A3A3A" },
-          { name: "Navy", code: "#1B2A4A" },
+        description: "Boxy oversized hoodies.",
+        bannerCount: 2,
+        products: [
+          {
+            name: "Boxy Oversized",
+            slug: "boxy-oversized",
+            description: "Dropped shoulder oversized hoodie.",
+            sizes: ["M", "L", "XL"],
+            colors: [
+              { name: "Cream", code: "#F1EDE5" },
+              { name: "Olive", code: "#5A6B3B" },
+            ],
+          },
         ],
       },
       {
         name: "Vintage Hoodie",
         slug: "vintage-hoodie",
-        description:
-          "Garment-dyed hoodie with a faded, lived-in look and soft hand-feel.",
-        sizes: ["M", "L", "XL"],
-        imageCount: 2,
-        colors: [
-          { name: "Washed Grey", code: "#A5A5A5" },
-          { name: "Faded Black", code: "#2A2A2A" },
-          { name: "Sand", code: "#D8C3A5" },
+        description: "Garment-dyed hoodies.",
+        bannerCount: 2,
+        products: [
+          {
+            name: "Faded",
+            slug: "faded",
+            description: "Garment-dyed faded hoodie.",
+            sizes: ["M", "L", "XL"],
+            colors: [
+              { name: "Washed Grey", code: "#A5A5A5" },
+              { name: "Faded Black", code: "#2A2A2A" },
+            ],
+          },
         ],
       },
     ],
@@ -330,8 +379,7 @@ const BANNERS: BannerInput[] = [
   {
     image: img("banner-hero-1", 1920, 720),
     title: "SS Executive Offer's",
-    subtitle:
-      "Premium T-Shirts, Polos, Aprons & Hoodies — bulk orders welcome.",
+    subtitle: "Premium T-Shirts, Polos, Aprons & Hoodies.",
     link: "/brands",
     active: true,
   },
@@ -353,7 +401,7 @@ const GALLERY: GalleryInput[] = [
   {
     image: img("gallery-fabric", 1200, 1200),
     title: "Fabric Close-up",
-    description: "Combed cotton texture at 180 GSM.",
+    description: "Combed cotton texture.",
   },
   {
     image: img("gallery-workshop", 1200, 1200),
@@ -367,49 +415,32 @@ const GALLERY: GalleryInput[] = [
   },
 ];
 
-/* ------------------------------------------------------------------ */
-/* Clear + seed logic                                                  */
-/* ------------------------------------------------------------------ */
-
-async function clearAllData() {
-  // 1. Colours (subcollection of brands)
-  const brandsSnap = await getDocs(collection(db, "brands"));
-  for (const brand of brandsSnap.docs) {
-    const colorsSnap = await getDocs(
-      collection(db, "brands", brand.id, "colors"),
-    );
-    await Promise.all(colorsSnap.docs.map((c) => deleteDoc(c.ref)));
+async function clearAll() {
+  const productsSnap = await getDocs(collection(db, "products"));
+  for (const p of productsSnap.docs) {
+    const colors = await getDocs(collection(db, "products", p.id, "colors"));
+    await Promise.all(colors.docs.map((c) => deleteDoc(c.ref)));
   }
+  await Promise.all(productsSnap.docs.map((p) => deleteDoc(p.ref)));
 
-  // 2. Brands
+  const brandsSnap = await getDocs(collection(db, "brands"));
   await Promise.all(brandsSnap.docs.map((b) => deleteDoc(b.ref)));
 
-  // 3. Categories
   const catsSnap = await getDocs(collection(db, "categories"));
   await Promise.all(catsSnap.docs.map((c) => deleteDoc(c.ref)));
 
-  // 4. Banners
   const bannersSnap = await getDocs(collection(db, "banners"));
   await Promise.all(bannersSnap.docs.map((b) => deleteDoc(b.ref)));
 
-  // 5. Gallery
   const gallerySnap = await getDocs(collection(db, "gallery"));
   await Promise.all(gallerySnap.docs.map((g) => deleteDoc(g.ref)));
 }
 
-/* ------------------------------------------------------------------ */
-/* Page                                                                */
-/* ------------------------------------------------------------------ */
-
-type Step = {
-  label: string;
-  status: "pending" | "running" | "done";
-};
-
+type Step = { label: string; status: "pending" | "running" | "done" };
 const INITIAL_STEPS: Step[] = [
   { label: "Clearing existing data", status: "pending" },
   { label: "Creating categories", status: "pending" },
-  { label: "Creating brands & colours", status: "pending" },
+  { label: "Creating brands & products", status: "pending" },
   { label: "Creating banners", status: "pending" },
   { label: "Creating gallery images", status: "pending" },
 ];
@@ -420,11 +451,10 @@ export default function SeedPage() {
   const [done, setDone] = useState(false);
   const [steps, setSteps] = useState<Step[]>(INITIAL_STEPS);
 
-  const setStepStatus = (index: number, status: Step["status"]) => {
+  const setStep = (i: number, status: Step["status"]) =>
     setSteps((prev) =>
-      prev.map((s, i) => (i === index ? { ...s, status } : s)),
+      prev.map((s, idx) => (idx === i ? { ...s, status } : s)),
     );
-  };
 
   const reset = () => {
     setSteps(INITIAL_STEPS);
@@ -436,14 +466,12 @@ export default function SeedPage() {
     reset();
 
     try {
-      // Step 1 — Clear
-      setStepStatus(0, "running");
-      await clearAllData();
-      setStepStatus(0, "done");
+      setStep(0, "running");
+      await clearAll();
+      setStep(0, "done");
       toast.success("Cleared", "All previous data removed.");
 
-      // Step 2 — Categories
-      setStepStatus(1, "running");
+      setStep(1, "running");
       const categoryIds: string[] = [];
       for (const cat of CATEGORIES) {
         const input: CategoryInput = {
@@ -452,27 +480,24 @@ export default function SeedPage() {
           description: cat.description,
           image: img(`cat-${cat.slug}`, 1200, 600),
         };
-        const id = await createCategory(input);
-        categoryIds.push(id);
+        categoryIds.push(await createCategory(input));
       }
-      setStepStatus(1, "done");
-      toast.success(
-        "Categories created",
-        `${CATEGORIES.length} categories added.`,
-      );
+      setStep(1, "done");
+      toast.success("Categories created", `${CATEGORIES.length} added.`);
 
-      // Step 3 — Brands + Colours
-      setStepStatus(2, "running");
+      setStep(2, "running");
       let brandCount = 0;
+      let productCount = 0;
       let colorCount = 0;
 
       for (let ci = 0; ci < CATEGORIES.length; ci++) {
-        const category = CATEGORIES[ci];
+        const cat = CATEGORIES[ci];
         const categoryId = categoryIds[ci];
 
-        for (const brand of category.brands) {
-          const images = Array.from({ length: brand.imageCount }, (_, i) =>
-            img(`brand-${brand.slug}-${i + 1}`, 800, 800),
+        for (const brand of cat.brands) {
+          const bannerImages = Array.from(
+            { length: brand.bannerCount },
+            (_, i) => img(`brand-${brand.slug}-banner-${i + 1}`, 1600, 900),
           );
 
           const brandInput: BrandInput = {
@@ -480,58 +505,63 @@ export default function SeedPage() {
             slug: brand.slug,
             description: brand.description,
             categoryId,
-            images,
-            sizes: brand.sizes,
+            bannerImages,
           };
-
           const brandId = await createBrand(brandInput);
           brandCount++;
 
-          for (const color of brand.colors) {
-            const colorInput: ColorInput = {
-              name: color.name,
-              code: color.code,
-              image: img(
-                `color-${brand.slug}-${color.code.replace("#", "")}`,
-                800,
-                800,
-              ),
+          for (const product of brand.products) {
+            const productInput: ProductInput = {
+              name: product.name,
+              slug: product.slug,
+              description: product.description,
+              brandId,
+              categoryId,
+              images: [
+                img(`product-${brand.slug}-${product.slug}-1`, 800, 800),
+                img(`product-${brand.slug}-${product.slug}-2`, 800, 800),
+              ],
+              sizes: product.sizes,
             };
-            await createColor(brandId, colorInput);
-            colorCount++;
+            const productId = await createProduct(productInput);
+            productCount++;
+
+            for (const c of product.colors) {
+              const colorInput: ColorInput = {
+                name: c.name,
+                code: c.code,
+                image: img(
+                  `color-${product.slug}-${c.code.replace("#", "")}`,
+                  800,
+                  800,
+                ),
+              };
+              await createProductColor(productId, colorInput);
+              colorCount++;
+            }
           }
         }
       }
-
-      setStepStatus(2, "done");
+      setStep(2, "done");
       toast.success(
-        "Brands & colours created",
-        `${brandCount} brands · ${colorCount} colours.`,
+        "Catalogue created",
+        `${brandCount} brands · ${productCount} products · ${colorCount} colours.`,
       );
 
-      // Step 4 — Banners
-      setStepStatus(3, "running");
-      for (const banner of BANNERS) {
-        await createBanner(banner);
-      }
-      setStepStatus(3, "done");
+      setStep(3, "running");
+      for (const b of BANNERS) await createBanner(b);
+      setStep(3, "done");
       toast.success("Banners created", `${BANNERS.length} added.`);
 
-      // Step 5 — Gallery
-      setStepStatus(4, "running");
-      for (const item of GALLERY) {
-        await createGalleryImage(item);
-      }
-      setStepStatus(4, "done");
+      setStep(4, "running");
+      for (const g of GALLERY) await createGalleryImage(g);
+      setStep(4, "done");
       toast.success("Gallery created", `${GALLERY.length} images added.`);
 
       setDone(true);
-    } catch (error) {
-      console.error(error);
-      toast.error(
-        "Seeding failed",
-        "Check the console for details. Some data may have been created.",
-      );
+    } catch (e) {
+      console.error(e);
+      toast.error("Seeding failed", "Check console for details.");
       setSteps((prev) =>
         prev.map((s) =>
           s.status === "running" ? { ...s, status: "pending" } : s,
@@ -542,9 +572,18 @@ export default function SeedPage() {
     }
   };
 
-  const totalBrands = CATEGORIES.reduce((sum, c) => sum + c.brands.length, 0);
+  const totalBrands = CATEGORIES.reduce((s, c) => s + c.brands.length, 0);
+  const totalProducts = CATEGORIES.reduce(
+    (s, c) => s + c.brands.reduce((x, b) => x + b.products.length, 0),
+    0,
+  );
   const totalColors = CATEGORIES.reduce(
-    (sum, c) => sum + c.brands.reduce((s, b) => s + b.colors.length, 0),
+    (s, c) =>
+      s +
+      c.brands.reduce(
+        (x, b) => x + b.products.reduce((y, p) => y + p.colors.length, 0),
+        0,
+      ),
     0,
   );
 
@@ -572,8 +611,8 @@ export default function SeedPage() {
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
               <Stat label="Categories" value={CATEGORIES.length} />
               <Stat label="Brands" value={totalBrands} />
+              <Stat label="Products" value={totalProducts} />
               <Stat label="Colours" value={totalColors} />
-              <Stat label="Banners" value={BANNERS.length} />
             </div>
 
             <ul className="space-y-2 text-[13px] leading-6 text-black/70">
@@ -582,25 +621,19 @@ export default function SeedPage() {
                   <span className="mt-1 inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-[#B80A0B]" />
                   <span>
                     <strong>{cat.name}</strong> — {cat.brands.length} brands ·{" "}
-                    {cat.brands.reduce((s, b) => s + b.colors.length, 0)}{" "}
-                    colours
+                    {cat.brands.reduce((s, b) => s + b.products.length, 0)}{" "}
+                    products
                   </span>
                 </li>
               ))}
-              <li className="flex items-start gap-2">
-                <span className="mt-1 inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-[#1845D6]" />
-                <span>
-                  <strong>Gallery</strong> — {GALLERY.length} images
-                </span>
-              </li>
             </ul>
 
             <div className="flex items-start gap-3 rounded-md border border-[#B80A0B]/20 bg-[rgba(184,10,11,0.04)] px-4 py-3">
               <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-[#B80A0B]" />
               <p className="text-[13px] leading-6 text-[#B80A0B]">
                 <strong>This wipes everything.</strong> All existing categories,
-                brands, colours, banners and gallery images will be permanently
-                deleted before the new data is inserted.
+                brands, products, colours, banners and gallery images will be
+                permanently deleted before the new data is inserted.
               </p>
             </div>
 
@@ -620,28 +653,6 @@ export default function SeedPage() {
                 </span>
               ) : null}
             </div>
-
-            {done ? (
-              <div className="rounded-md border border-[#1845D6]/20 bg-[rgba(24,69,214,0.05)] px-4 py-3 text-[13px] leading-6 text-[#1845D6]">
-                Head to{" "}
-                <Link href="/admin/categories" className="underline">
-                  Categories
-                </Link>
-                ,{" "}
-                <Link href="/admin/brands" className="underline">
-                  Brands
-                </Link>
-                ,{" "}
-                <Link href="/admin/banners" className="underline">
-                  Banners
-                </Link>{" "}
-                or{" "}
-                <Link href="/admin/gallery" className="underline">
-                  Gallery
-                </Link>{" "}
-                to see the new data.
-              </div>
-            ) : null}
           </CardBody>
         </Card>
 
@@ -649,7 +660,7 @@ export default function SeedPage() {
           <CardHeader title="Progress" />
           <CardBody>
             <ol className="space-y-3">
-              {steps.map((step, index) => (
+              {steps.map((step, i) => (
                 <li key={step.label} className="flex items-center gap-3">
                   <span
                     className={
@@ -666,7 +677,7 @@ export default function SeedPage() {
                     ) : step.status === "running" ? (
                       <Loader2 className="h-3.5 w-3.5 animate-spin" />
                     ) : (
-                      index + 1
+                      i + 1
                     )}
                   </span>
                   <span

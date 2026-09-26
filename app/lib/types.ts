@@ -19,6 +19,19 @@ export interface Brand {
   slug: string;
   description: string;
   categoryId: string;
+  bannerImages: string[];
+  productCount: number;
+  createdAt: Date | null;
+  updatedAt: Date | null;
+}
+
+export interface Product {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  brandId: string;
+  categoryId: string;
   images: string[];
   sizes: string[];
   colorCount: number;
@@ -26,7 +39,7 @@ export interface Brand {
   updatedAt: Date | null;
 }
 
-export interface BrandColor {
+export interface ProductColor {
   id: string;
   name: string;
   code: string;

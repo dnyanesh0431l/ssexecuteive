@@ -78,11 +78,11 @@ export default function HomePage() {
   }, [categoriesState.data, brandsState.data]);
 
   return (
-    <div className="bg-background pb-20">
-      {/* ---------- Hero carousel ---------- */}
-      <section className="mx-auto max-w-3xl px-5 pt-8 sm:pt-12">
-        <div className="relative overflow-hidden rounded-2xl border border-border bg-light-gray p-2 sm:p-3">
-          <div className="relative aspect-[16/11] overflow-hidden rounded-xl">
+    <div className="bg-white pb-16">
+      {/* Hero carousel */}
+      <section className="mx-auto max-w-3xl px-4 pt-6 sm:pt-8">
+        <div className="relative overflow-hidden rounded-3xl border-[6px] border-[#1845D6] bg-[#F1F3F8]">
+          <div className="relative aspect-[16/11]">
             {banners.map((b, i) => (
               <div
                 key={b.id}
@@ -100,54 +100,44 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* Indicators */}
-        <div className="mt-5 flex items-center justify-center gap-2">
+        <div className="mt-4 flex items-center justify-center gap-2.5">
           {banners.map((_, i) => (
             <button
               key={i}
               type="button"
               onClick={() => setSlide(i)}
               aria-label={`Go to slide ${i + 1}`}
-              className={`h-[3px] rounded-full transition-all duration-300 ${
-                i === slide
-                  ? "w-8 bg-primary-blue"
-                  : "w-4 bg-border hover:bg-foreground/25"
+              className={`h-2.5 w-2.5 rounded-full transition-colors ${
+                i === slide ? "bg-[#1845D6]" : "bg-black/15 hover:bg-black/30"
               }`}
             />
           ))}
         </div>
       </section>
 
-      {/* ---------- Intro ---------- */}
-      <div className="mx-auto mt-12 max-w-3xl px-5 text-center sm:mt-16">
-        <h1 className="text-[32px] font-bold leading-[1.15] tracking-tight text-foreground sm:text-[42px]">
-          The SS Executive collection
-        </h1>
-        <p className="mx-auto mt-3 max-w-md text-[15px] leading-6 text-foreground/55">
-          Fine shirting and formal wear, organised by house and by style.
-        </p>
-      </div>
+      <h1 className="mx-auto mt-8 max-w-3xl px-4 text-center text-3xl font-extrabold leading-tight tracking-tight text-[#1845D6] sm:text-4xl">
+        SS EXECUTIVE OFFER&apos;S
+      </h1>
 
-      {/* ---------- Categories ---------- */}
-      <section className="mx-auto mt-10 max-w-3xl space-y-7 px-5 sm:mt-12">
+      <section className="mx-auto mt-8 max-w-3xl space-y-8 px-4">
         {categoriesState.loading || brandsState.loading ? (
-          <div className="space-y-7">
+          <div className="space-y-8">
             {[1, 2].map((i) => (
               <div
                 key={i}
-                className="animate-pulse rounded-2xl bg-foreground px-6 py-10"
+                className="animate-pulse rounded-3xl bg-[#1A2340]/90 px-6 py-10"
               >
-                <div className="mx-auto h-6 w-44 rounded bg-background/10" />
-                <div className="mt-7 grid grid-cols-2 gap-px overflow-hidden rounded-lg bg-background/10">
+                <div className="mx-auto h-7 w-40 rounded bg-white/10" />
+                <div className="mt-6 grid grid-cols-2 gap-3">
                   {[1, 2, 3, 4].map((j) => (
-                    <div key={j} className="h-12 bg-foreground" />
+                    <div key={j} className="h-12 rounded-md bg-white/10" />
                   ))}
                 </div>
               </div>
             ))}
           </div>
         ) : categoriesState.data.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-border py-16 text-center text-sm text-foreground/45">
+          <div className="rounded-3xl border border-dashed border-[#E5E5E5] py-16 text-center text-sm text-black/50">
             No categories yet.
           </div>
         ) : (
@@ -156,26 +146,23 @@ export default function HomePage() {
             return (
               <div
                 key={cat.id}
-                className="rounded-2xl bg-foreground px-6 py-9 sm:px-9 sm:py-11"
+                className="rounded-3xl bg-[#1A2340] px-5 py-8 shadow-[0_10px_30px_-18px_rgba(26,35,64,0.6)] sm:px-8 sm:py-10"
               >
-                <div className="flex flex-col items-center">
-                  <h2 className="text-center text-[26px] font-semibold tracking-tight text-background sm:text-[32px]">
-                    {cat.name}
-                  </h2>
-                  <span className="mt-3 h-[3px] w-10 rounded-full bg-primary-blue" />
-                </div>
+                <h2 className="text-center text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
+                  {cat.name}
+                </h2>
 
                 {brands.length === 0 ? (
-                  <p className="mt-6 text-center text-sm text-background/40">
+                  <p className="mt-6 text-center text-sm text-white/50">
                     No brands in this category yet.
                   </p>
                 ) : (
-                  <div className="mt-8 grid grid-cols-2 gap-px overflow-hidden rounded-lg bg-background/10">
+                  <div className="mt-6 grid grid-cols-2 gap-3 sm:gap-4">
                     {brands.map((brand) => (
                       <Link
                         key={brand.id}
                         href={`/brands/${brand.slug}`}
-                        className="flex min-h-[60px] items-center justify-center bg-foreground px-3 py-3 text-center text-[13px] font-medium tracking-wide text-background/90 transition-colors hover:bg-background/[0.06] hover:text-primary-blue sm:text-sm"
+                        className="flex min-h-[56px] items-center justify-center rounded-md bg-[#F4F3EE] px-3 py-3 text-center text-sm font-extrabold uppercase tracking-wide text-[#1A2340] transition-all hover:bg-white hover:shadow-lg sm:text-base"
                       >
                         {brand.name}
                       </Link>

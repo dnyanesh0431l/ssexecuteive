@@ -1,19 +1,22 @@
-// components/admin/brands/ColorFormModal.tsx
+// components/admin/products/ColorFormModal.tsx
 "use client";
 
 import { useEffect, useState } from "react";
-import { Button } from "../../../components/ui/Button";
-import { ImageUploader } from "../../../components/ui/ImageUploader";
-import { Input } from "../../../components/ui/Input";
-import { Modal } from "../../../components/ui/Modal";
-import { createColor, updateColor } from "../../../lib/firebase/brands";
-import type { BrandColor } from "../../../lib/types";
+import { Button } from "../../ui/Button";
+import { ImageUploader } from "../../ui/ImageUploader";
+import { Input } from "../../ui/Input";
+import { Modal } from "../../ui/Modal";
+import {
+  createProductColor,
+  updateProductColor,
+} from "../../../lib/firebase/products";
+import type { ProductColor } from "../../../lib/types";
 import { cn, contrastText, isValidHex, normalizeHex } from "../../../lib/utils";
 
 interface ColorFormModalProps {
   open: boolean;
-  brandId: string;
-  color?: BrandColor | null;
+  productId: string;
+  color?: ProductColor | null;
   onClose: () => void;
   onSaved: () => void;
 }
@@ -31,7 +34,7 @@ interface FormErrors {
 
 export function ColorFormModal({
   open,
-  brandId,
+  productId,
   color,
   onClose,
   onSaved,
@@ -71,8 +74,9 @@ export function ColorFormModal({
         code: normalizeHex(form.code),
         image: form.image,
       };
-      if (isEdit && color) await updateColor(brandId, color.id, payload);
-      else await createColor(brandId, payload);
+      if (isEdit && color)
+        await updateProductColor(productId, color.id, payload);
+      else await createProductColor(productId, payload);
       onSaved();
       onClose();
     } finally {
@@ -89,7 +93,7 @@ export function ColorFormModal({
       open={open}
       onClose={saving ? () => undefined : onClose}
       title={isEdit ? "Edit colour" : "Add colour"}
-      description="Colours are stored inside this brand."
+      description="Colours are stored inside this product."
       size="lg"
       dismissible={!saving}
       footer={
@@ -175,7 +179,7 @@ export function ColorFormModal({
 
         <ImageUploader
           label="Colour image"
-          folder={`brands/${brandId}/colors`}
+          folder={`products/${productId}/colors`}
           value={form.image}
           hint="Shown on the product detail page for this colour."
           onChange={(url) => setForm((p) => ({ ...p, image: url }))}

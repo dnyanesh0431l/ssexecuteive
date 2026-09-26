@@ -1,20 +1,16 @@
 // components/admin/Sidebar.tsx
 "use client";
 
-import { Images, LayoutDashboard, LogOut,Layers, Mail,ImageIcon, Shirt, X } from "lucide-react";
+import { Images, LayoutDashboard, LogOut,Layers, Mail,ImageIcon, Shirt, X, Package } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "../../lib/utils";
 
 const NAV_ITEMS = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
-  {
-    href: "/admin/categories",
-    label: "Categories",
-    icon: Layers,
-    exact: false,
-  },
+  { href: "/admin/categories", label: "Categories", icon: Layers, exact: false },
   { href: "/admin/brands", label: "Brands", icon: Shirt, exact: false },
+  { href: "/admin/products", label: "Products", icon: Package, exact: false },
   { href: "/admin/banners", label: "Banners", icon: ImageIcon, exact: false },
   { href: "/admin/gallery", label: "Gallery", icon: Images, exact: false },
   {
@@ -24,7 +20,6 @@ const NAV_ITEMS = [
     exact: false,
   },
 ];
-
 function isActive(pathname: string, href: string, exact: boolean) {
   if (exact) return pathname === href;
   return pathname === href || pathname.startsWith(`${href}/`);
