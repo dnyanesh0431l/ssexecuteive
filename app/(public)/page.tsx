@@ -14,7 +14,7 @@ import type { Banner } from "../lib/types";
 const FALLBACK_BANNERS: Banner[] = [
   {
     id: "f1",
-    image: "https://picsum.photos/seed/ssexec-hero-1/1920/1080",
+    image: "https://picsum.photos/seed/ssexec-hero-1/1920/820",
     title: "SS Executive Offer's",
     subtitle: "",
     link: "",
@@ -24,7 +24,7 @@ const FALLBACK_BANNERS: Banner[] = [
   },
   {
     id: "f2",
-    image: "https://picsum.photos/seed/ssexec-hero-2/1920/1080",
+    image: "https://picsum.photos/seed/ssexec-hero-2/1920/820",
     title: "",
     subtitle: "",
     link: "",
@@ -34,7 +34,7 @@ const FALLBACK_BANNERS: Banner[] = [
   },
   {
     id: "f3",
-    image: "https://picsum.photos/seed/ssexec-hero-3/1920/1080",
+    image: "https://picsum.photos/seed/ssexec-hero-3/1920/820",
     title: "",
     subtitle: "",
     link: "",
@@ -104,11 +104,12 @@ export default function HomePage() {
 
   return (
     <div className="pb-8">
-      {/* ---------- Hero carousel (YouTube 16:9) ---------- */}
+      {/* ---------- Hero carousel ---------- */}
       {banners.length > 0 ? (
         <section className="mx-auto mt-3 max-w-7xl px-0 sm:px-6">
           <div className="bg-white shadow-sm">
-            <div className="relative aspect-video overflow-hidden">
+            {/* 16:9 on mobile · 21:9 on desktop */}
+            <div className="relative aspect-video overflow-hidden sm:aspect-[21/9]">
               {banners.map((b, i) => {
                 const inner = (
                   // eslint-disable-next-line @next/next/no-img-element
