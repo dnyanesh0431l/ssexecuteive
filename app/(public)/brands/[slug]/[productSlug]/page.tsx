@@ -1,14 +1,7 @@
 // app/(public)/brands/[slug]/[productSlug]/page.tsx
 "use client";
 
-import {
-  Check,
-  ChevronRight,
-  Phone,
-  Share2,
-  ShieldCheck,
-  Truck,
-} from "lucide-react";
+import { ChevronRight, Phone, Share2, ShieldCheck, Truck } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -19,13 +12,12 @@ import {
   useProducts,
 } from "../../../../lib/hooks/useCollectionData";
 import type { ProductColor } from "../../../../lib/types";
-import { cn } from "../../../../lib/utils";
 
 /* ------------------------------------------------------------------ */
-/* Contact constants — replace with the real numbers                  */
+/* Contact constants                                                   */
 /* ------------------------------------------------------------------ */
-const WHATSAPP_NUMBER = "919999999999"; // digits only, country code included
-const WHATSAPP_DISPLAY = "+91 99999 99999"; // shown to the user
+const WHATSAPP_NUMBER = "919999999999";
+const WHATSAPP_DISPLAY = "+91 99999 99999";
 const EMAIL = "info@ssexecutive.com";
 
 export default function ProductDetailPage() {
@@ -54,8 +46,6 @@ export default function ProductDetailPage() {
 
   const [colors, setColors] = useState<ProductColor[]>([]);
   const [activeImage, setActiveImage] = useState(0);
-  const [activeColorId, setActiveColorId] = useState<string | null>(null);
-  const [activeSize, setActiveSize] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
@@ -70,8 +60,6 @@ export default function ProductDetailPage() {
 
   useEffect(() => {
     setActiveImage(0);
-    setActiveColorId(null);
-    setActiveSize(null);
   }, [product?.id]);
 
   const handleShare = async () => {
@@ -126,17 +114,15 @@ export default function ProductDetailPage() {
     );
   }
 
-  const activeColor = colors.find((c) => c.id === activeColorId) ?? null;
-  const displayImage =
-    activeColor?.image ||
-    product.images[activeImage] ||
-    product.images[0] ||
-    "";
+  const displayImage = product.images[activeImage] || product.images[0] || "";
 
   /* ---------- Contact links ---------- */
-  const enquiryLine = `Hi SS Executive, I'm interested in ${brand.name} — ${product.name}${
-    activeColor ? ` (Colour: ${activeColor.name})` : ""
-  }${activeSize ? ` — Size ${activeSize}` : ""}. Please share pricing and availability.`;
+  const colourList = colors.map((c) => c.name).join(", ");
+  const sizeList = product.sizes.join(", ");
+
+  const enquiryLine = `Hi SS Executive, I'm interested in ${brand.name} — ${product.name}.${
+    colourList ? `\n\nAvailable colours: ${colourList}.` : ""
+  }${sizeList ? `\nAvailable sizes: ${sizeList}.` : ""}\n\nPlease share pricing and availability.`;
 
   const whatsappHref = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
     enquiryLine,
@@ -181,32 +167,26 @@ export default function ProductDetailPage() {
         {/* ---------- Main two-column card ---------- */}
         <section className="mt-3 bg-white shadow-sm">
           <div className="grid gap-0 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
-            {/* ============ LEFT — Image gallery ============ */}
+            {/* ============ LEFT — Product image only ============ */}
             <div className="lg:sticky lg:top-24 lg:self-start lg:border-r lg:border-[#F0F0F0]">
               <div className="flex flex-col-reverse gap-3 p-4 sm:flex-row sm:gap-4 sm:p-5">
-                {/* Thumbnails */}
+                {/* Thumbnails — product images only */}
                 {product.images.length > 1 ? (
                   <div className="flex gap-2 overflow-x-auto sm:flex-col sm:overflow-visible">
                     {product.images.map((url, i) => {
-                      const selected = activeImage === i && !activeColorId;
+                      const selected = activeImage === i;
                       return (
                         <button
                           key={`${url}-${i}`}
                           type="button"
-                          onMouseEnter={() => {
-                            setActiveImage(i);
-                            setActiveColorId(null);
-                          }}
-                          onClick={() => {
-                            setActiveImage(i);
-                            setActiveColorId(null);
-                          }}
-                          className={cn(
-                            "h-14 w-14 shrink-0 overflow-hidden border-2 transition-all sm:h-16 sm:w-16",
-                            selected
+                          onMouseEnter={() => setActiveImage(i)}
+                          onClick={() => setActiveImage(i)}
+                          className={
+                            "h-14 w-14 shrink-0 overflow-hidden border-2 transition-all sm:h-16 sm:w-16 " +
+                            (selected
                               ? "border-[#1845D6]"
-                              : "border-[#E5E5E5] hover:border-[#1845D6]/50",
-                          )}
+                              : "border-[#E5E5E5] hover:border-[#1845D6]/50")
+                          }
                         >
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
@@ -220,7 +200,7 @@ export default function ProductDetailPage() {
                   </div>
                 ) : null}
 
-                {/* Main image */}
+                {/* Main product image */}
                 <div className="relative flex-1">
                   <div className="relative aspect-square overflow-hidden bg-white">
                     {displayImage ? (
@@ -263,65 +243,50 @@ export default function ProductDetailPage() {
                 {product.name}
               </h1>
 
-              {/* ---------- Selected colour + size line ---------- */}
-              {activeColor || activeSize ? (
-                <p className="mt-3 text-[13px] text-black/60">
-                  {activeColor ? (
-                    <>
-                      Colour:{" "}
-                      <span className="font-medium text-[#1A2340]">
-                        {activeColor.name}
-                      </span>
-                    </>
-                  ) : null}
-                  {activeColor && activeSize ? " · " : null}
-                  {activeSize ? (
-                    <>
-                      Size:{" "}
-                      <span className="font-medium text-[#1A2340]">
-                        {activeSize}
-                      </span>
-                    </>
-                  ) : null}
-                </p>
-              ) : null}
-
-              {/* ---------- Size selector ---------- */}
-              {product.sizes.length > 0 ? (
+              {/* ---------- Available Colours — inline display only ---------- */}
+              {colors.length > 0 ? (
                 <div className="mt-5">
-                  <div className="flex items-baseline gap-2">
-                    <p className="text-[12px] font-bold uppercase tracking-widest text-black/55">
-                      Size
-                    </p>
-                    <p className="text-[13px] font-medium text-[#1A2340]">
-                      {activeSize ?? "Select a size"}
-                    </p>
-                  </div>
-
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {product.sizes.map((size) => {
-                      const selected = size === activeSize;
-                      return (
-                        <button
-                          key={size}
-                          type="button"
-                          onClick={() => setActiveSize(selected ? null : size)}
-                          className={cn(
-                            "flex h-10 min-w-[52px] items-center justify-center border px-4 text-[13px] font-semibold uppercase tracking-wide transition-colors",
-                            selected
-                              ? "border-[#1845D6] bg-[rgba(24,69,214,0.06)] text-[#1845D6]"
-                              : "border-[#E5E5E5] bg-white text-[#1A2340] hover:border-black/30",
-                          )}
-                        >
-                          {size}
-                        </button>
-                      );
-                    })}
-                  </div>
+                  <p className="text-[12px] font-bold uppercase tracking-widest text-black/55">
+                    Available Colours
+                  </p>
+                  <ul className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+                    {colors.map((c) => (
+                      <li
+                        key={c.id}
+                        className="flex items-center gap-2 text-[13px] font-medium text-[#1A2340]"
+                      >
+                        <span
+                          className="h-5 w-5 shrink-0 rounded-full border border-black/15"
+                          style={{ backgroundColor: c.code }}
+                          aria-hidden
+                        />
+                        {c.name}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               ) : null}
 
-              {/* ---------- Compact trust line ---------- */}
+              {/* ---------- Available Sizes — display only ---------- */}
+              {product.sizes.length > 0 ? (
+                <div className="mt-5">
+                  <p className="text-[12px] font-bold uppercase tracking-widest text-black/55">
+                    Available Sizes
+                  </p>
+                  <ul className="mt-3 flex flex-wrap gap-2">
+                    {product.sizes.map((size) => (
+                      <li
+                        key={size}
+                        className="flex h-9 min-w-[48px] items-center justify-center border border-[#E5E5E5] bg-white px-3 text-[13px] font-semibold uppercase tracking-wide text-[#1A2340]"
+                      >
+                        {size}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+
+              {/* ---------- Trust line ---------- */}
               <ul className="mt-5 space-y-2 border-t border-[#F0F0F0] pt-4">
                 <li className="flex items-center gap-2.5 text-[13px] text-[#1A2340]">
                   <Truck className="h-4 w-4 shrink-0 text-[#1845D6]" />
@@ -360,7 +325,7 @@ export default function ProductDetailPage() {
               </div>
 
               <p className="mt-3 text-center text-[12px] text-black/55">
-                Or call / WhatsApp us directly at{" "}
+                Or reach us at{" "}
                 <strong className="text-[#1A2340]">{WHATSAPP_DISPLAY}</strong>
               </p>
 
@@ -372,23 +337,27 @@ export default function ProductDetailPage() {
                   {EMAIL}
                 </a>
               </p>
-
-              {/* ---------- Description ---------- */}
-              {product.description ? (
-                <div className="mt-5 border-t border-[#F0F0F0] pt-4">
-                  <p className="text-[11px] font-bold uppercase tracking-widest text-black/55">
-                    Description
-                  </p>
-                  <p className="mt-2 text-[13px] leading-6 text-black/75">
-                    {product.description}
-                  </p>
-                </div>
-              ) : null}
             </div>
           </div>
         </section>
 
-        {/* ---------- Available Colours — product-card grid ---------- */}
+        {/* ---------- Description section ---------- */}
+        {product.description ? (
+          <section className="mt-3 bg-white shadow-sm">
+            <div className="border-b border-[#F0F0F0] px-5 py-3.5 sm:px-6">
+              <h2 className="text-[15px] font-bold uppercase tracking-tight text-[#1A2340] sm:text-[17px]">
+                Description
+              </h2>
+            </div>
+            <div className="px-5 py-5 sm:px-6 sm:py-6">
+              <p className="text-[13px] leading-7 text-black/75 sm:text-sm">
+                {product.description}
+              </p>
+            </div>
+          </section>
+        ) : null}
+
+        {/* ---------- Available Colours — display-only cards ---------- */}
         {colors.length > 0 ? (
           <section className="mt-3 bg-white shadow-sm">
             <div className="flex items-center justify-between border-b border-[#F0F0F0] px-5 py-3.5 sm:px-6">
@@ -401,62 +370,34 @@ export default function ProductDetailPage() {
             </div>
 
             <div className="grid grid-cols-2 divide-x divide-y divide-[#F0F0F0] sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-              {colors.map((c) => {
-                const selected = c.id === activeColorId;
-                return (
-                  <button
-                    key={c.id}
-                    type="button"
-                    onClick={() => {
-                      setActiveColorId(selected ? null : c.id);
-                      window.scrollTo({ top: 0, behavior: "smooth" });
-                    }}
-                    className={cn(
-                      "group relative flex flex-col p-4 text-left transition-colors",
-                      selected ? "bg-[#F8F9FB]" : "hover:bg-[#F8F9FB]",
+              {colors.map((c) => (
+                <div key={c.id} className="flex flex-col p-4">
+                  {/* Colour image / swatch */}
+                  <div className="relative aspect-square w-full overflow-hidden bg-[#F6F6F6]">
+                    {c.image ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={c.image}
+                        alt={c.name}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <span
+                        className="block h-full w-full"
+                        style={{ backgroundColor: c.code }}
+                      />
                     )}
-                  >
-                    {/* Selected tick */}
-                    {selected ? (
-                      <span className="absolute right-3 top-3 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-[#1845D6] text-white shadow-md">
-                        <Check className="h-3.5 w-3.5" strokeWidth={3} />
-                      </span>
-                    ) : null}
+                  </div>
 
-                    {/* Colour swatch card */}
-                    <div className="relative aspect-square w-full overflow-hidden bg-[#F6F6F6]">
-                      {c.image ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={c.image}
-                          alt={c.name}
-                          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                        />
-                      ) : (
-                        <span
-                          className="block h-full w-full"
-                          style={{ backgroundColor: c.code }}
-                        />
-                      )}
-                    </div>
-
-                    {/* Colour name + code */}
-                    <p
-                      className={cn(
-                        "mt-3 line-clamp-1 text-[13px] font-medium",
-                        selected
-                          ? "text-[#1845D6]"
-                          : "text-[#1A2340] group-hover:text-[#1845D6]",
-                      )}
-                    >
-                      {c.name}
-                    </p>
-                    <span className="mt-0.5 font-mono text-[10px] uppercase text-black/40">
-                      {c.code}
-                    </span>
-                  </button>
-                );
-              })}
+                  {/* Colour name + code */}
+                  <p className="mt-3 line-clamp-1 text-[13px] font-medium text-[#1A2340]">
+                    {c.name}
+                  </p>
+                  <span className="mt-0.5 font-mono text-[10px] uppercase text-black/40">
+                    {c.code}
+                  </span>
+                </div>
+              ))}
             </div>
           </section>
         ) : null}
