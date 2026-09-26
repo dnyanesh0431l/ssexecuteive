@@ -207,13 +207,7 @@ export default function HomePage() {
                   <h2 className="text-[15px] font-bold uppercase tracking-tight text-[#1A2340] sm:text-[17px]">
                     {cat.name}
                   </h2>
-                  <Link
-                    href="/brands"
-                    className="flex items-center gap-0.5 rounded-sm bg-[#1845D6] px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-white shadow-sm transition-colors hover:bg-[#1438B3] sm:text-[11px]"
-                  >
-                    View All
-                    <ChevronRight className="h-3 w-3" />
-                  </Link>
+                  
                 </div>
 
                 {/* Brand grid */}
