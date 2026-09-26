@@ -246,9 +246,7 @@ export default function ProductDetailPage() {
 
               {/* Rating + Assured */}
               <div className="mt-3 flex items-center gap-3">
-                <span className="inline-flex items-center gap-1 rounded bg-[#388E3C] px-2 py-0.5 text-[11px] font-bold text-white">
-                  4.5 ★
-                </span>
+                 
                 <span className="text-[12px] text-black/50">
                   Premium Quality
                 </span>
@@ -257,15 +255,7 @@ export default function ProductDetailPage() {
               {/* Divider */}
               <div className="my-5 border-t border-[#F0F0F0]" />
 
-              {/* Active colour name (read-only label — picker is below) */}
-              {colors.length > 0 ? (
-                <p className="text-[13px] text-black/60">
-                  Colour:{" "}
-                  <span className="font-medium text-[#1A2340]">
-                    {activeColor ? activeColor.name : "All available"}
-                  </span>
-                </p>
-              ) : null}
+              
 
               {/* Size selection */}
               {product.sizes.length > 0 ? (

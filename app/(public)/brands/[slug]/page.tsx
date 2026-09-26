@@ -181,13 +181,7 @@ export default function BrandDetailPage() {
             <h2 className="text-[15px] font-bold uppercase tracking-tight text-[#1A2340] sm:text-[17px]">
               Our Products
             </h2>
-            <Link
-              href="/brands"
-              className="flex items-center gap-0.5 text-[11px] font-bold uppercase tracking-widest text-[#1845D6] transition-opacity hover:opacity-75 sm:text-[12px]"
-            >
-              All Brands
-              <ChevronRight className="h-3.5 w-3.5" />
-            </Link>
+           
           </div>
 
           {products.length === 0 ? (
@@ -212,7 +206,7 @@ export default function BrandDetailPage() {
                       />
                     ) : null}
                   </div>
-                  <p className="mt-3 line-clamp-1 text-center text-[13px] font-medium text-[#1A2340] group-hover:text-[#1845D6]">
+                  <p className="mt-3 line-clamp-2 text-center text-[18px] font-bold text-[#1A2340] group-hover:text-[#1845D6]">
                     {product.name}
                   </p>
                   <p className="mt-0.5 text-center text-[11px] font-semibold text-[#388E3C]">

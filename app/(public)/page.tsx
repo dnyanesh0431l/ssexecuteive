@@ -80,8 +80,6 @@ export default function HomePage() {
 
   return (
     <div className="pb-8">
-      
-
       {/* ---------- Hero carousel ---------- */}
       {banners.length > 0 ? (
         <section className="mx-auto mt-3 max-w-7xl px-0 sm:px-6">
@@ -208,7 +206,6 @@ export default function HomePage() {
                   <h2 className="text-[15px] font-bold uppercase tracking-tight text-[#1A2340] sm:text-[17px]">
                     {cat.name}
                   </h2>
-                  
                 </div>
 
                 {/* Brand grid */}
@@ -229,7 +226,7 @@ export default function HomePage() {
                           />
                         ) : null}
                       </div>
-                      <p className="mt-3 line-clamp-1 text-center text-[13px] font-medium text-[#1A2340] group-hover:text-[#1845D6]">
+                      <p className="mt-3 line-clamp-2 text-center text-[18px] font-bold text-[#1A2340] group-hover:text-[#1845D6]">
                         {brand.name}
                       </p>
                       <p className="mt-0.5 text-center text-[11px] font-semibold text-[#388E3C]">
