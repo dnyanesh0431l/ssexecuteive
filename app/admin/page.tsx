@@ -7,6 +7,7 @@ import {
   Images,
   Layers,
   Mail,
+  Package,
   Palette,
   Plus,
   Shirt,
@@ -27,24 +28,27 @@ import {
   useCategories,
   useContactRequests,
   useGallery,
+  useProducts,
 } from "../lib/hooks/useCollectionData";
 import { formatDate, truncate } from "../lib/utils";
 
 export default function AdminDashboardPage() {
   const brands = useBrands();
+  const products = useProducts();
   const categories = useCategories();
   const banners = useBanners();
   const gallery = useGallery();
   const requests = useContactRequests();
 
+  /* Total colours across every product */
   const totalColors = useMemo(
-    () => brands.data.reduce((sum, brand) => sum + (brand.colorCount || 0), 0),
-    [brands.data],
+    () => products.data.reduce((sum, p) => sum + (p.colorCount || 0), 0),
+    [products.data]
   );
 
   const newRequests = useMemo(
     () => requests.data.filter((r) => r.status === "new").length,
-    [requests.data],
+    [requests.data]
   );
 
   const categoryMap = useMemo(() => {
@@ -70,6 +74,7 @@ export default function AdminDashboardPage() {
         }
       />
 
+      {/* ---------- Stat cards ---------- */}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <StatCard
           label="Categories"
@@ -86,9 +91,15 @@ export default function AdminDashboardPage() {
           accent="red"
         />
         <StatCard
+          label="Products"
+          value={products.data.length}
+          loading={products.loading}
+          icon={<Package className="h-4 w-4" />}
+        />
+        <StatCard
           label="Colours"
           value={totalColors}
-          loading={brands.loading}
+          loading={products.loading}
           icon={<Palette className="h-4 w-4" />}
           accent="blue"
         />
@@ -104,6 +115,10 @@ export default function AdminDashboardPage() {
           loading={gallery.loading}
           icon={<Images className="h-4 w-4" />}
         />
+      </div>
+
+      {/* ---------- New Requests (full-width card) ---------- */}
+      <div className="mt-4">
         <StatCard
           label="New Requests"
           value={newRequests}
@@ -114,7 +129,9 @@ export default function AdminDashboardPage() {
         />
       </div>
 
+      {/* ---------- Two-column lists ---------- */}
       <div className="mt-6 grid gap-6 xl:grid-cols-2">
+        {/* ----- Recent contact requests ----- */}
         <Card>
           <CardHeader
             title="Recent contact requests"
@@ -173,6 +190,7 @@ export default function AdminDashboardPage() {
           )}
         </Card>
 
+        {/* ----- Recently added brands ----- */}
         <Card>
           <CardHeader
             title="Recently added brands"
@@ -221,10 +239,10 @@ export default function AdminDashboardPage() {
                     className="flex items-center gap-4 px-5 py-3.5 transition-colors hover:bg-[#F6F6F6]"
                   >
                     <span className="h-12 w-10 shrink-0 overflow-hidden rounded border border-[#E5E5E5] bg-[#F6F6F6]">
-                      {brand.images ? (
+                      {brand.bannerImages[0] ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
-                          src={brand.images[0]}
+                          src={brand.bannerImages[0]}
                           alt=""
                           className="h-full w-full object-cover"
                         />
@@ -236,8 +254,8 @@ export default function AdminDashboardPage() {
                       </p>
                       <p className="mt-0.5 truncate text-xs text-black/50">
                         {categoryMap.get(brand.categoryId) ?? "No category"} ·{" "}
-                        {brand.colorCount} colour
-                        {brand.colorCount === 1 ? "" : "s"}
+                        {brand.productCount} product
+                        {brand.productCount === 1 ? "" : "s"}
                       </p>
                     </div>
                     <ArrowRight className="h-4 w-4 shrink-0 text-black/25" />
