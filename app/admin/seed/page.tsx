@@ -27,8 +27,16 @@ import { createGalleryImage } from "../../lib/firebase/gallery";
 import type { ColorInput, ProductInput } from "../../lib/firebase/products";
 import { createProduct, createProductColor } from "../../lib/firebase/products";
 
+/* ------------------------------------------------------------------ */
+/* Image helper — picsum with seeds = always loads, always consistent  */
+/* ------------------------------------------------------------------ */
+
 const img = (seed: string, w = 800, h = 800) =>
   `https://picsum.photos/seed/${encodeURIComponent(seed)}/${w}/${h}`;
+
+/* ------------------------------------------------------------------ */
+/* Mock data — real brands + realistic product names                   */
+/* ------------------------------------------------------------------ */
 
 interface MockColor {
   name: string;
@@ -63,28 +71,30 @@ const CATEGORIES: MockCategory[] = [
       "Premium cotton tees for everyday wear — multiple colours, fits and fabric weights.",
     brands: [
       {
-        name: "US-POLO",
-        slug: "us-polo",
-        description: "Classic crew-neck tees in combed cotton.",
+        name: "US Polo Assn",
+        slug: "us-polo-assn",
+        description:
+          "The official brand of the United States Polo Association. Classic American style since 1890.",
         bannerCount: 2,
         products: [
           {
-            name: "US-RWI36",
-            slug: "us-rwi36",
+            name: "Crew Neck Tee",
+            slug: "crew-neck-tee",
             description:
-              "180 GSM combed cotton crew-neck tee. Pre-shrunk and colourfast.",
+              "180 GSM combed cotton crew-neck tee with USPA embroidery on chest. Pre-shrunk and colourfast.",
             sizes: ["S", "M", "L", "XL", "XXL"],
             colors: [
-              { name: "Z-Black", code: "#111111" },
+              { name: "Black", code: "#111111" },
               { name: "White", code: "#FFFFFF" },
               { name: "Navy", code: "#1B2A4A" },
-              { name: "Brown", code: "#7B4A2D" },
+              { name: "Olive", code: "#5A6B3B" },
             ],
           },
           {
-            name: "US-RWI42",
-            slug: "us-rwi42",
-            description: "Heavyweight 220 GSM tee with dropped shoulders.",
+            name: "Graphic Tee",
+            slug: "graphic-tee",
+            description:
+              "Heavyweight 220 GSM tee with large heritage graphic print. Drop shoulders for a relaxed fit.",
             sizes: ["M", "L", "XL", "XXL"],
             colors: [
               { name: "Black", code: "#111111" },
@@ -94,56 +104,63 @@ const CATEGORIES: MockCategory[] = [
         ],
       },
       {
-        name: "RUFTY",
-        slug: "rufty",
-        description: "Relaxed-fit heavyweight tees.",
+        name: "Lacoste",
+        slug: "lacoste",
+        description:
+          "French elegance and sportswear heritage since 1933. The iconic crocodile logo.",
         bannerCount: 2,
         products: [
           {
-            name: "Vintage Wash",
-            slug: "vintage-wash",
-            description: "Vintage washed heavyweight tee.",
-            sizes: ["M", "L", "XL"],
-            colors: [
-              { name: "Charcoal", code: "#3A3A3A" },
-              { name: "Olive", code: "#5A6B3B" },
-            ],
-          },
-        ],
-      },
-      {
-        name: "Classic Crew",
-        slug: "classic-crew",
-        description: "Everyday crew-neck staples.",
-        bannerCount: 2,
-        products: [
-          {
-            name: "Regular Fit",
-            slug: "regular-fit",
-            description: "Regular fit tee with reinforced neckline.",
+            name: "Pima Cotton Tee",
+            slug: "pima-cotton-tee",
+            description:
+              "Luxuriously soft Pima cotton tee with embroidered crocodile. Tailored fit.",
             sizes: ["S", "M", "L", "XL"],
             colors: [
               { name: "White", code: "#FFFFFF" },
-              { name: "Black", code: "#111111" },
-              { name: "Heather Grey", code: "#9A9A9A" },
+              { name: "Navy", code: "#1B2A4A" },
+              { name: "Sky Blue", code: "#8FB4D9" },
             ],
           },
         ],
       },
       {
-        name: "Streetwear Co",
-        slug: "streetwear-co",
-        description: "Boxy-fit streetwear tees.",
+        name: "Sunspel",
+        slug: "sunspel",
+        description:
+          "British craftsmanship since 1860. The original inventors of the luxury t-shirt.",
         bannerCount: 2,
         products: [
           {
-            name: "Boxy Tee",
-            slug: "boxy-tee",
-            description: "Boxy-fit drop-shoulder tee.",
-            sizes: ["M", "L", "XL"],
+            name: "Classic T-Shirt",
+            slug: "classic-t-shirt",
+            description:
+              "The world's finest t-shirt. Made from long-staple Supima cotton for unrivalled softness.",
+            sizes: ["S", "M", "L", "XL", "XXL"],
             colors: [
+              { name: "White", code: "#FFFFFF" },
               { name: "Black", code: "#111111" },
-              { name: "Off White", code: "#F1EDE5" },
+              { name: "Grey Marl", code: "#9A9A9A" },
+            ],
+          },
+        ],
+      },
+      {
+        name: "Buck Mason",
+        slug: "buck-mason",
+        description:
+          "American essentials built to last. California-designed, responsibly made.",
+        bannerCount: 2,
+        products: [
+          {
+            name: "Pima Curve-Hem Tee",
+            slug: "pima-curve-hem-tee",
+            description:
+              "Signature curved hem tee in soft Pima cotton. The perfect everyday basic.",
+            sizes: ["S", "M", "L", "XL"],
+            colors: [
+              { name: "Slate", code: "#5A6B7A" },
+              { name: "Faded Black", code: "#2A2A2A" },
             ],
           },
         ],
@@ -153,37 +170,43 @@ const CATEGORIES: MockCategory[] = [
   {
     name: "Polo Shirts",
     slug: "polo-shirts",
-    description: "Smart-casual polos with pique cotton and clean tailoring.",
+    description:
+      "Smart-casual polos with pique cotton and clean tailoring — perfect for uniforms and everyday wear.",
     brands: [
       {
-        name: "Executive Polo",
-        slug: "executive-polo",
-        description: "Refined pique polos.",
+        name: "Ralph Lauren",
+        slug: "ralph-lauren",
+        description:
+          "The definitive American luxury lifestyle brand. Iconic Polo Player logo.",
         bannerCount: 2,
         products: [
           {
-            name: "Tipped Collar",
-            slug: "tipped-collar",
-            description: "Pique polo with tipped collar.",
+            name: "Custom Slim Fit Polo",
+            slug: "custom-slim-fit-polo",
+            description:
+              "Classic pique polo with signature embroidered pony. Ribbed collar and cuffs.",
             sizes: ["S", "M", "L", "XL", "XXL"],
             colors: [
               { name: "Navy", code: "#1B2A4A" },
               { name: "White", code: "#FFFFFF" },
-              { name: "Sky Blue", code: "#8FB4D9" },
+              { name: "Burgundy", code: "#5A1A28" },
+              { name: "Forest Green", code: "#2F6B3B" },
             ],
           },
         ],
       },
       {
-        name: "Court Polo",
-        slug: "court-polo",
-        description: "Sport-inspired polos.",
+        name: "Lacoste",
+        slug: "lacoste-polo",
+        description:
+          "The original polo shirt. Invented by René Lacoste in 1933. Iconic crocodile.",
         bannerCount: 2,
         products: [
           {
-            name: "Mesh Back",
-            slug: "mesh-back",
-            description: "Sport polo with contrast placket.",
+            name: "L.12.12 Original Polo",
+            slug: "l1212-original-polo",
+            description:
+              "The world's first polo shirt. Made from petit piqué cotton. Ribbed collar, button placket.",
             sizes: ["S", "M", "L", "XL"],
             colors: [
               { name: "White", code: "#FFFFFF" },
@@ -194,19 +217,43 @@ const CATEGORIES: MockCategory[] = [
         ],
       },
       {
-        name: "Heritage Polo",
-        slug: "heritage-polo",
-        description: "Vintage-inspired polos.",
+        name: "Fred Perry",
+        slug: "fred-perry",
+        description:
+          "British subculture icon. The laurel wreath since 1952. Mod, punk, and Britpop heritage.",
         bannerCount: 2,
         products: [
           {
-            name: "Heavy Pique",
-            slug: "heavy-pique",
-            description: "Heavy pique polo with lived-in softness.",
-            sizes: ["M", "L", "XL", "XXL"],
+            name: "M3600 Twin Tipped Polo",
+            slug: "m3600-twin-tipped-polo",
+            description:
+              "Signature twin-tipped collar and cuffs. Made from cotton pique. Slim fit.",
+            sizes: ["S", "M", "L", "XL"],
             colors: [
-              { name: "Beige", code: "#C9B48F" },
-              { name: "Brown", code: "#5B3A24" },
+              { name: "Black/White", code: "#111111" },
+              { name: "Navy/Red", code: "#1B2A4A" },
+              { name: "White/Black", code: "#FFFFFF" },
+            ],
+          },
+        ],
+      },
+      {
+        name: "Tommy Hilfiger",
+        slug: "tommy-hilfiger",
+        description:
+          "Classic American cool. Iconic red, white, and blue flag logo.",
+        bannerCount: 2,
+        products: [
+          {
+            name: "Regular Fit Polo",
+            slug: "regular-fit-polo",
+            description:
+              "Classic fit polo with embroidered flag logo. Pique cotton with a soft finish.",
+            sizes: ["S", "M", "L", "XL", "XXL"],
+            colors: [
+              { name: "Navy", code: "#1B2A4A" },
+              { name: "White", code: "#FFFFFF" },
+              { name: "Sky Blue", code: "#8FB4D9" },
             ],
           },
         ],
@@ -217,76 +264,97 @@ const CATEGORIES: MockCategory[] = [
     name: "Aprons",
     slug: "aprons",
     description:
-      "Durable, professional aprons for kitchens, salons and workshops.",
+      "Durable, professional aprons for kitchens, salons, workshops and front-of-house.",
     brands: [
       {
-        name: "Chef Pro",
-        slug: "chef-pro",
-        description: "Professional chef aprons.",
+        name: "Chef Works",
+        slug: "chef-works",
+        description:
+          "The global leader in culinary apparel. Trusted by professional kitchens in 90+ countries.",
         bannerCount: 2,
         products: [
           {
-            name: "Stain-Resist",
-            slug: "stain-resist",
-            description: "Stain-resistant chef apron.",
+            name: "Olympia Bib Apron",
+            slug: "olympia-bib-apron",
+            description:
+              "Classic bib apron with adjustable neck strap and two front pockets. 65/35 poly-cotton blend.",
             sizes: ["M", "L", "XL"],
             colors: [
               { name: "Black", code: "#111111" },
               { name: "White", code: "#FFFFFF" },
-            ],
-          },
-        ],
-      },
-      {
-        name: "Bistro Apron",
-        slug: "bistro-apron",
-        description: "Half-length bistro aprons.",
-        bannerCount: 2,
-        products: [
-          {
-            name: "Half Length",
-            slug: "half-length",
-            description: "Twin-pocket bistro apron.",
-            sizes: ["M", "L"],
-            colors: [
-              { name: "Black", code: "#111111" },
               { name: "Navy", code: "#1B2A4A" },
             ],
           },
-        ],
-      },
-      {
-        name: "Workshop Apron",
-        slug: "workshop-apron",
-        description: "Heavy-duty canvas aprons.",
-        bannerCount: 2,
-        products: [
           {
-            name: "Canvas Pro",
-            slug: "canvas-pro",
-            description: "Cross-back canvas apron.",
-            sizes: ["M", "L", "XL"],
+            name: "Bistro Apron",
+            slug: "bistro-apron",
+            description:
+              "Half-length bistro apron with twin front pockets and wide waist tie. Perfect for front-of-house.",
+            sizes: ["M", "L"],
             colors: [
-              { name: "Khaki", code: "#B8A47A" },
               { name: "Black", code: "#111111" },
+              { name: "Khaki", code: "#B8A47A" },
             ],
           },
         ],
       },
       {
-        name: "Canvas Apron",
-        slug: "canvas-apron",
-        description: "Everyday canvas aprons.",
+        name: "Carhartt",
+        slug: "carhartt",
+        description:
+          "Premium workwear built for the toughest jobs. Firm duck canvas construction.",
         bannerCount: 2,
         products: [
           {
-            name: "Everyday",
-            slug: "everyday",
-            description: "Everyday canvas apron.",
+            name: "Firm Duck Apron",
+            slug: "firm-duck-apron",
+            description:
+              "12-ounce firm-hand cotton duck apron with four large pockets and tool loops.",
             sizes: ["M", "L", "XL"],
             colors: [
-              { name: "Natural", code: "#E8DDBE" },
+              { name: "Brown", code: "#5B3A24" },
+              { name: "Black", code: "#111111" },
               { name: "Olive", code: "#5A6B3B" },
+            ],
+          },
+        ],
+      },
+      {
+        name: "Portland Apron Co",
+        slug: "portland-apron-co",
+        description:
+          "Handcrafted in Portland, Oregon. Durable waxed canvas and leather aprons.",
+        bannerCount: 2,
+        products: [
+          {
+            name: "Waxed Canvas Apron",
+            slug: "waxed-canvas-apron",
+            description:
+              "Waxed canvas apron with full-grain leather straps and cross-back design. Built to last a lifetime.",
+            sizes: ["M", "L", "XL"],
+            colors: [
+              { name: "Tan", code: "#C9B48F" },
+              { name: "Charcoal", code: "#3A3A3A" },
+            ],
+          },
+        ],
+      },
+      {
+        name: "San Jamar",
+        slug: "san-jamar",
+        description:
+          "Professional foodservice solutions. Trusted by restaurants worldwide.",
+        bannerCount: 2,
+        products: [
+          {
+            name: "Flame-Resistant Apron",
+            slug: "flame-resistant-apron",
+            description:
+              "36-inch flame-resistant apron with adjustable buckle strap. Meets ASTM standards.",
+            sizes: ["L", "XL"],
+            colors: [
+              { name: "Red", code: "#B80A0B" },
+              { name: "Yellow", code: "#D4A017" },
             ],
           },
         ],
@@ -296,38 +364,35 @@ const CATEGORIES: MockCategory[] = [
   {
     name: "Hoodies",
     slug: "hoodies",
-    description: "Warm, heavyweight hoodies in brushed fleece.",
+    description:
+      "Warm, heavyweight hoodies in brushed fleece — built for comfort and layering.",
     brands: [
       {
-        name: "Fleece Hoodie",
-        slug: "fleece-hoodie",
-        description: "320 GSM brushed fleece hoodies.",
+        name: "Champion",
+        slug: "champion",
+        description:
+          "Authentic American athletic heritage since 1919. Inventors of the reverse weave hoodie.",
         bannerCount: 2,
         products: [
           {
-            name: "Classic Pullover",
-            slug: "classic-pullover",
-            description: "Classic kangaroo-pocket hoodie.",
+            name: "Reverse Weave Hoodie",
+            slug: "reverse-weave-hoodie",
+            description:
+              "400 GSM Reverse Weave fleece. Patented 1930s technology resists shrinkage and maintains shape.",
             sizes: ["S", "M", "L", "XL", "XXL"],
             colors: [
               { name: "Black", code: "#111111" },
               { name: "Grey", code: "#7E7E7E" },
               { name: "Navy", code: "#1B2A4A" },
+              { name: "Maroon", code: "#6B1F2A" },
             ],
           },
-        ],
-      },
-      {
-        name: "Zip-Up Classic",
-        slug: "zip-up-classic",
-        description: "Full-zip hoodies.",
-        bannerCount: 2,
-        products: [
           {
-            name: "Full Zip",
-            slug: "full-zip",
-            description: "Metal zip hoodie with ribbed cuffs.",
-            sizes: ["M", "L", "XL"],
+            name: "Powerblend Full-Zip",
+            slug: "powerblend-full-zip",
+            description:
+              "Midweight 9 oz. cotton-poly fleece full-zip hoodie. Athletic fit with front pockets.",
+            sizes: ["M", "L", "XL", "XXL"],
             colors: [
               { name: "Black", code: "#111111" },
               { name: "Navy", code: "#1B2A4A" },
@@ -336,37 +401,64 @@ const CATEGORIES: MockCategory[] = [
         ],
       },
       {
-        name: "Oversized Hoodie",
-        slug: "oversized-hoodie",
-        description: "Boxy oversized hoodies.",
+        name: "Carhartt WIP",
+        slug: "carhartt-wip",
+        description:
+          "Workwear-inspired streetwear. Rugged construction meets contemporary design.",
         bannerCount: 2,
         products: [
           {
-            name: "Boxy Oversized",
-            slug: "boxy-oversized",
-            description: "Dropped shoulder oversized hoodie.",
+            name: "Hooded Sweatshirt",
+            slug: "hooded-sweatshirt",
+            description:
+              "Heavyweight cotton-blend hoodie with kangaroo pocket and logo embroidery.",
             sizes: ["M", "L", "XL"],
             colors: [
-              { name: "Cream", code: "#F1EDE5" },
+              { name: "Black", code: "#111111" },
+              { name: "Charcoal", code: "#3A3A3A" },
               { name: "Olive", code: "#5A6B3B" },
             ],
           },
         ],
       },
       {
-        name: "Vintage Hoodie",
-        slug: "vintage-hoodie",
-        description: "Garment-dyed hoodies.",
+        name: "The North Face",
+        slug: "the-north-face",
+        description:
+          "Never stop exploring. Premium outdoor apparel and equipment since 1966.",
         bannerCount: 2,
         products: [
           {
-            name: "Faded",
-            slug: "faded",
-            description: "Garment-dyed faded hoodie.",
-            sizes: ["M", "L", "XL"],
+            name: "Half Dome Pullover",
+            slug: "half-dome-pullover",
+            description:
+              "Classic pullover hoodie with Half Dome logo. Brushed fleece interior for warmth.",
+            sizes: ["S", "M", "L", "XL", "XXL"],
             colors: [
-              { name: "Washed Grey", code: "#A5A5A5" },
-              { name: "Faded Black", code: "#2A2A2A" },
+              { name: "Black", code: "#111111" },
+              { name: "Navy", code: "#1B2A4A" },
+              { name: "Grey", code: "#7E7E7E" },
+            ],
+          },
+        ],
+      },
+      {
+        name: "Gildan",
+        slug: "gildan",
+        description:
+          "Everyday essentials at accessible prices. Soft cotton-blend fleece.",
+        bannerCount: 2,
+        products: [
+          {
+            name: "Heavy Blend Hoodie",
+            slug: "heavy-blend-hoodie",
+            description:
+              "8 oz. 50/50 cotton-poly fleece hoodie. Double-lined hood with drawcord.",
+            sizes: ["S", "M", "L", "XL", "XXL"],
+            colors: [
+              { name: "Black", code: "#111111" },
+              { name: "White", code: "#FFFFFF" },
+              { name: "Red", code: "#B80A0B" },
             ],
           },
         ],
@@ -377,14 +469,15 @@ const CATEGORIES: MockCategory[] = [
 
 const BANNERS: BannerInput[] = [
   {
-    image: img("banner-hero-1", 1920, 720),
+    image: img("banner-ss-executive-1", 1920, 720),
     title: "SS Executive Offer's",
-    subtitle: "Premium T-Shirts, Polos, Aprons & Hoodies.",
+    subtitle:
+      "Premium T-Shirts, Polos, Aprons & Hoodies — bulk orders welcome.",
     link: "/brands",
     active: true,
   },
   {
-    image: img("banner-hero-2", 1920, 720),
+    image: img("banner-ss-executive-2", 1920, 720),
     title: "New Season Arrivals",
     subtitle: "Fresh colours and fits added every month.",
     link: "/brands",
@@ -394,14 +487,14 @@ const BANNERS: BannerInput[] = [
 
 const GALLERY: GalleryInput[] = [
   {
-    image: img("gallery-studio", 1200, 1200),
+    image: img("gallery-studio-shoot", 1200, 1200),
     title: "Studio Shoot",
     description: "Behind the scenes of our latest collection.",
   },
   {
-    image: img("gallery-fabric", 1200, 1200),
+    image: img("gallery-fabric-closeup", 1200, 1200),
     title: "Fabric Close-up",
-    description: "Combed cotton texture.",
+    description: "Combed cotton texture at 180 GSM.",
   },
   {
     image: img("gallery-workshop", 1200, 1200),
@@ -414,6 +507,10 @@ const GALLERY: GalleryInput[] = [
     description: "A curated look at the season's palette.",
   },
 ];
+
+/* ------------------------------------------------------------------ */
+/* Clear + seed logic                                                  */
+/* ------------------------------------------------------------------ */
 
 async function clearAll() {
   const productsSnap = await getDocs(collection(db, "products"));
@@ -466,11 +563,13 @@ export default function SeedPage() {
     reset();
 
     try {
+      /* Step 1 — Clear */
       setStep(0, "running");
       await clearAll();
       setStep(0, "done");
       toast.success("Cleared", "All previous data removed.");
 
+      /* Step 2 — Categories */
       setStep(1, "running");
       const categoryIds: string[] = [];
       for (const cat of CATEGORIES) {
@@ -485,6 +584,7 @@ export default function SeedPage() {
       setStep(1, "done");
       toast.success("Categories created", `${CATEGORIES.length} added.`);
 
+      /* Step 3 — Brands + Products + Colors */
       setStep(2, "running");
       let brandCount = 0;
       let productCount = 0;
@@ -548,11 +648,13 @@ export default function SeedPage() {
         `${brandCount} brands · ${productCount} products · ${colorCount} colours.`,
       );
 
+      /* Step 4 — Banners */
       setStep(3, "running");
       for (const b of BANNERS) await createBanner(b);
       setStep(3, "done");
       toast.success("Banners created", `${BANNERS.length} added.`);
 
+      /* Step 5 — Gallery */
       setStep(4, "running");
       for (const g of GALLERY) await createGalleryImage(g);
       setStep(4, "done");
@@ -653,6 +755,32 @@ export default function SeedPage() {
                 </span>
               ) : null}
             </div>
+
+            {done ? (
+              <div className="rounded-md border border-[#1845D6]/20 bg-[rgba(24,69,214,0.05)] px-4 py-3 text-[13px] leading-6 text-[#1845D6]">
+                Head to{" "}
+                <Link href="/admin/categories" className="underline">
+                  Categories
+                </Link>
+                ,{" "}
+                <Link href="/admin/brands" className="underline">
+                  Brands
+                </Link>
+                ,{" "}
+                <Link href="/admin/products" className="underline">
+                  Products
+                </Link>
+                ,{" "}
+                <Link href="/admin/banners" className="underline">
+                  Banners
+                </Link>{" "}
+                or{" "}
+                <Link href="/admin/gallery" className="underline">
+                  Gallery
+                </Link>{" "}
+                to see the new data.
+              </div>
+            ) : null}
           </CardBody>
         </Card>
 

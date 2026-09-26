@@ -7,9 +7,9 @@ import { useEffect, useMemo, useState } from "react";
 import {
   useBrands,
   useProducts,
-} from "../../../../../lib/hooks/useCollectionData";
-import { subscribeToProductColors } from "../../../../../lib/firebase/products";
-import type { ProductColor } from "../../../../../lib/types";
+} from "../../../../lib/hooks/useCollectionData";
+import { subscribeToProductColors } from "../../../../lib/firebase/products";
+import type { ProductColor } from "../../../../lib/types";
 
 export default function ProductDetailPage() {
   const params = useParams<{ slug: string; productSlug: string }>();

@@ -7,7 +7,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   useBrands,
   useProducts,
-} from "../../../../lib/hooks/useCollectionData";
+} from "../../lib/hooks/useCollectionData";
 
 export default function BrandDetailPage() {
   const params = useParams<{ slug: string }>();

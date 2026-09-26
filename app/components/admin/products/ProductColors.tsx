@@ -1,20 +1,20 @@
 // components/admin/products/ProductColors.tsx
 "use client";
 
-import { useEffect, useState } from "react";
 import { Pencil, Plus, Shirt, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
 import { Button } from "../../../components/ui/Button";
 import { ConfirmDialog } from "../../../components/ui/ConfirmDialog";
 import { EmptyState } from "../../../components/ui/EmptyState";
 import { ErrorState } from "../../../components/ui/ErrorState";
 import { Skeleton } from "../../../components/ui/Skeleton";
 import { useToast } from "../../../components/ui/Toast";
-import { ColorFormModal } from "./ColorFormModal";
 import {
   deleteProductColor,
   subscribeToProductColors,
 } from "../../../lib/firebase/products";
 import type { ProductColor } from "../../../lib/types";
+import { ColorFormModal } from "./ColorFormModal";
 
 export function ProductColors({ productId }: { productId: string }) {
   const toast = useToast();
@@ -38,7 +38,7 @@ export function ProductColors({ productId }: { productId: string }) {
       () => {
         setError("Could not load colours for this product.");
         setLoading(false);
-      }
+      },
     );
     return () => unsubscribe();
   }, [productId]);
@@ -48,7 +48,10 @@ export function ProductColors({ productId }: { productId: string }) {
     setDeleting(true);
     try {
       await deleteProductColor(productId, pendingDelete.id);
-      toast.success("Colour deleted", `${pendingDelete.name} has been removed.`);
+      toast.success(
+        "Colour deleted",
+        `${pendingDelete.name} has been removed.`,
+      );
       setPendingDelete(null);
     } catch {
       toast.error("Could not delete colour", "Please try again.");
@@ -194,7 +197,7 @@ export function ProductColors({ productId }: { productId: string }) {
         onSaved={() =>
           toast.success(
             editing ? "Colour updated" : "Colour added",
-            "Changes are live immediately."
+            "Changes are live immediately.",
           )
         }
       />
