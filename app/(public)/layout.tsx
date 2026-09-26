@@ -13,14 +13,8 @@ export default function PublicLayout({
       <header className="sticky top-0 z-40 bg-[#1845D6] shadow-md">
         <div className="mx-auto flex h-14 max-w-7xl items-center gap-2 px-3 sm:h-16 sm:gap-4 sm:px-6">
           {/* Logo */}
-          <Link href="/" className="flex shrink-0 items-center gap-2">
-            <span className="flex h-9 w-9 items-center justify-center rounded-md bg-white font-black leading-none shadow-sm">
-              <span className="text-[14px] text-[#B80A0B]">S</span>
-              <span className="text-[14px] text-[#1845D6]">S</span>
-            </span>
-            <span className="hidden text-base font-extrabold uppercase tracking-wide text-white sm:block sm:text-lg">
-              SS Executive
-            </span>
+          <Link href="/" className="flex shrink-0 items-center bg-white">
+           <img src="/SSlogo.png" alt="" className="w-12 h-12" />
           </Link>
 
           {/* Search */}
