@@ -16,9 +16,9 @@ import type { ProductColor } from "../../../../lib/types";
 /* ------------------------------------------------------------------ */
 /* Contact constants                                                   */
 /* ------------------------------------------------------------------ */
-const WHATSAPP_NUMBER = "919999999999";
-const WHATSAPP_DISPLAY = "+91 99999 99999";
-const EMAIL = "info@ssexecutive.com";
+const WHATSAPP_NUMBER = "918087776060";
+const WHATSAPP_DISPLAY = "+91 8087776060";
+const EMAIL = "ss.executivecsn@gmail.com";
 
 export default function ProductDetailPage() {
   const params = useParams<{ slug: string; productSlug: string }>();
