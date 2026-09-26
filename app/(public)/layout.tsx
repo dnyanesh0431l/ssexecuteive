@@ -1,6 +1,6 @@
 // app/(public)/layout.tsx
-import { Search } from "lucide-react";
 import Link from "next/link";
+import { SearchBar } from "./SearchBar";
 
 /* ------------------------------------------------------------------ */
 /* Contact                                                             */
@@ -28,15 +28,8 @@ export default function PublicLayout({
             <img src="/SSlogo.png" alt="SS Executive" className="h-12 w-12" />
           </Link>
 
-          {/* Search */}
-          <div className="relative mx-1 min-w-0 flex-1 sm:mx-4 sm:max-w-xl">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#1845D6]" />
-            <input
-              type="text"
-              placeholder="Search for products, brands and more"
-              className="h-9 w-full rounded-sm border-0 bg-white pl-9 pr-3 text-[13px] text-black placeholder:text-black/40 focus:outline-none sm:h-10"
-            />
-          </div>
+          {/* Search — client component with live dropdown */}
+          <SearchBar />
         </div>
 
         {/* Secondary nav strip */}
@@ -87,7 +80,6 @@ export default function PublicLayout({
         aria-label="Chat on WhatsApp"
         className="fixed bottom-5 right-5 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-[#25D366] shadow-lg transition-transform hover:scale-105 sm:bottom-6 sm:right-6 sm:h-16 sm:w-16"
       >
-        {/* Real WhatsApp icon */}
         <svg
           viewBox="0 0 24 24"
           className="h-7 w-7 fill-white sm:h-8 sm:w-8"
