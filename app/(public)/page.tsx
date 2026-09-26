@@ -80,34 +80,7 @@ export default function HomePage() {
 
   return (
     <div className="pb-8">
-      {/* ---------- Category chips strip ---------- */}
-      {categoriesState.data.length > 0 ? (
-        <section className="bg-white shadow-sm">
-          <div className="mx-auto flex max-w-7xl items-start justify-start gap-4 overflow-x-auto px-4 py-3 scrollbar-hide sm:justify-center sm:gap-10 sm:px-6 sm:py-4">
-            {categoriesState.data.map((cat) => (
-              <Link
-                key={cat.id}
-                href={`#category-${cat.id}`}
-                className="group flex w-[68px] shrink-0 flex-col items-center gap-1.5 sm:w-[84px]"
-              >
-                <div className="h-14 w-14 overflow-hidden rounded-full border border-[#E5E5E5] bg-[#F6F6F6] transition-transform group-hover:scale-105 sm:h-16 sm:w-16">
-                  {cat.image ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={cat.image}
-                      alt={cat.name}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : null}
-                </div>
-                <span className="line-clamp-1 text-center text-[11px] font-medium text-[#1A2340] sm:text-[12px]">
-                  {cat.name}
-                </span>
-              </Link>
-            ))}
-          </div>
-        </section>
-      ) : null}
+      
 
       {/* ---------- Hero carousel ---------- */}
       {banners.length > 0 ? (
@@ -159,6 +132,34 @@ export default function HomePage() {
                 </div>
               ) : null}
             </div>
+          </div>
+        </section>
+      ) : null}
+      {/* ---------- Category chips strip ---------- */}
+      {categoriesState.data.length > 0 ? (
+        <section className="bg-white shadow-sm">
+          <div className="mx-auto flex max-w-7xl items-start justify-start gap-4 overflow-x-auto px-4 py-3 scrollbar-hide sm:justify-center sm:gap-10 sm:px-6 sm:py-4">
+            {categoriesState.data.map((cat) => (
+              <Link
+                key={cat.id}
+                href={`#category-${cat.id}`}
+                className="group flex w-[68px] shrink-0 flex-col items-center gap-1.5 sm:w-[84px]"
+              >
+                <div className="h-14 w-14 overflow-hidden rounded-full border border-[#E5E5E5] bg-[#F6F6F6] transition-transform group-hover:scale-105 sm:h-16 sm:w-16">
+                  {cat.image ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={cat.image}
+                      alt={cat.name}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : null}
+                </div>
+                <span className="line-clamp-1 text-center text-[11px] font-medium text-[#1A2340] sm:text-[12px]">
+                  {cat.name}
+                </span>
+              </Link>
+            ))}
           </div>
         </section>
       ) : null}
