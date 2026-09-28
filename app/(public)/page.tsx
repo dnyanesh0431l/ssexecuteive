@@ -14,7 +14,7 @@ import type { Banner } from "../lib/types";
 const FALLBACK_BANNERS: Banner[] = [
   {
     id: "f1",
-    image: "https://picsum.photos/seed/ssexec-hero-1/1920/820",
+    image: "https://i.pinimg.com/1200x/ad/89/12/ad891271ccf1262ac153bab88ca68c57.jpg",
     title: "SS Executive Offer's",
     subtitle: "",
     link: "",
@@ -170,7 +170,7 @@ export default function HomePage() {
                 className="group flex w-[68px] shrink-0 flex-col items-center gap-1.5 sm:w-[84px]"
               >
                 <div
-                  className={`h-14 w-14 overflow-hidden rounded-full border border-[#E5E5E5] transition-transform group-hover:scale-105 sm:h-16 sm:w-16 ${
+                  className={`h-14 w-14 overflow-hidden  transition-transform group-hover:scale-105 sm:h-16 sm:w-16 ${
                     CATEGORY_BG[idx % CATEGORY_BG.length]
                   }`}
                 >

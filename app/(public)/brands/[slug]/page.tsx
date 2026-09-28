@@ -109,7 +109,7 @@ export default function BrandDetailPage() {
         {/* ---------- Banner carousel ---------- */}
         {banners.length > 0 ? (
           <section className="mt-3 bg-white shadow-sm sm:rounded">
-            <div className="relative aspect-[21/9] overflow-hidden sm:aspect-[3/1]">
+            <div className="relative aspect-video overflow-hidden">
               {banners.map((url, i) => (
                 <div
                   key={`${url}-${i}`}
@@ -125,7 +125,6 @@ export default function BrandDetailPage() {
                 </div>
               ))}
 
-              {/* Dots overlaid on banner */}
               {banners.length > 1 ? (
                 <div className="absolute bottom-3 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1.5">
                   {banners.map((_, i) => (
@@ -181,7 +180,6 @@ export default function BrandDetailPage() {
             <h2 className="text-[15px] font-bold uppercase tracking-tight text-[#1A2340] sm:text-[17px]">
               Our Products
             </h2>
-           
           </div>
 
           {products.length === 0 ? (

@@ -285,18 +285,18 @@ export default function ProductDetailPage() {
                   </ul>
                 </div>
               ) : null}
+              {/* ---------- Description section ---------- */}
+              {product.description ? (
+                <section className="mt-3 bg-white shadow-sm">
+                  <div className="px-5 py-5 sm:px-6 sm:py-6">
+                    <p className="text-[13px] leading-7 text-black/75 sm:text-sm">
+                      {product.description}
+                    </p>
+                  </div>
+                </section>
+              ) : null}
 
-              {/* ---------- Trust line ---------- */}
-              <ul className="mt-5 space-y-2 border-t border-[#F0F0F0] pt-4">
-                <li className="flex items-center gap-2.5 text-[13px] text-[#1A2340]">
-                  <Truck className="h-4 w-4 shrink-0 text-[#1845D6]" />
-                  <span>Bulk orders welcome · Free shipping over 50 units</span>
-                </li>
-                <li className="flex items-center gap-2.5 text-[13px] text-[#1A2340]">
-                  <ShieldCheck className="h-4 w-4 shrink-0 text-[#1845D6]" />
-                  <span>Quality guaranteed · 100% cotton, colourfast</span>
-                </li>
-              </ul>
+            
 
               {/* ---------- WhatsApp + Call CTAs ---------- */}
               <div className="mt-5 grid grid-cols-2 gap-3">
@@ -340,22 +340,6 @@ export default function ProductDetailPage() {
             </div>
           </div>
         </section>
-
-        {/* ---------- Description section ---------- */}
-        {product.description ? (
-          <section className="mt-3 bg-white shadow-sm">
-            <div className="border-b border-[#F0F0F0] px-5 py-3.5 sm:px-6">
-              <h2 className="text-[15px] font-bold uppercase tracking-tight text-[#1A2340] sm:text-[17px]">
-                Description
-              </h2>
-            </div>
-            <div className="px-5 py-5 sm:px-6 sm:py-6">
-              <p className="text-[13px] leading-7 text-black/75 sm:text-sm">
-                {product.description}
-              </p>
-            </div>
-          </section>
-        ) : null}
 
         {/* ---------- Available Colours — display-only cards ---------- */}
         {colors.length > 0 ? (

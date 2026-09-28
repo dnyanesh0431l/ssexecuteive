@@ -33,28 +33,7 @@ export default function PublicLayout({
         </div>
 
         {/* Secondary nav strip */}
-        <div className="hidden border-t border-white/10 bg-[#1845D6] sm:block">
-          <div className="mx-auto flex max-w-7xl items-center gap-6 px-6 py-2 text-[13px] font-medium text-white/85">
-            <Link href="/" className="transition-colors hover:text-white">
-              Home
-            </Link>
-            <Link href="/brands" className="transition-colors hover:text-white">
-              All Brands
-            </Link>
-            <Link href="/brands" className="transition-colors hover:text-white">
-              T-Shirts
-            </Link>
-            <Link href="/brands" className="transition-colors hover:text-white">
-              Polo Shirts
-            </Link>
-            <Link href="/brands" className="transition-colors hover:text-white">
-              Aprons
-            </Link>
-            <Link href="/brands" className="transition-colors hover:text-white">
-              Hoodies
-            </Link>
-          </div>
-        </div>
+       
       </header>
 
       {/* ---------- Page ---------- */}
