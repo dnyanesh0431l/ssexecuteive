@@ -1,10 +1,10 @@
 // app/(public)/brands/[slug]/[productSlug]/page.tsx
 "use client";
 
-import { ChevronRight, Phone, Share2, ShieldCheck, Truck } from "lucide-react";
+import { ChevronLeft, ChevronRight, Phone, Share2 } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { subscribeToProductColors } from "../../../../lib/firebase/products";
 import {
   useBrands,
@@ -48,6 +48,9 @@ export default function ProductDetailPage() {
   const [activeImage, setActiveImage] = useState(0);
   const [copied, setCopied] = useState(false);
 
+  /* ---------- Touch swipe tracking ---------- */
+  const touchStartX = useRef<number | null>(null);
+
   useEffect(() => {
     if (!product?.id) return;
     const unsub = subscribeToProductColors(
@@ -61,6 +64,47 @@ export default function ProductDetailPage() {
   useEffect(() => {
     setActiveImage(0);
   }, [product?.id]);
+
+  /* ---------- Slider ---------- */
+  const imageCount = product?.images?.length ?? 0;
+
+  const goNext = useCallback(() => {
+    if (imageCount <= 1) return;
+    setActiveImage((i) => (i + 1) % imageCount);
+  }, [imageCount]);
+
+  const goPrev = useCallback(() => {
+    if (imageCount <= 1) return;
+    setActiveImage((i) => (i - 1 + imageCount) % imageCount);
+  }, [imageCount]);
+
+  /* Keyboard arrows */
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "ArrowRight") goNext();
+      if (e.key === "ArrowLeft") goPrev();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [goNext, goPrev]);
+
+  /* Clamp index if images array changes */
+  useEffect(() => {
+    if (activeImage > imageCount - 1) setActiveImage(0);
+  }, [imageCount, activeImage]);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0]?.clientX ?? null;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null) return;
+    const dx = (e.changedTouches[0]?.clientX ?? 0) - touchStartX.current;
+    touchStartX.current = null;
+    if (Math.abs(dx) < 40) return;
+    if (dx < 0) goNext();
+    else goPrev();
+  };
 
   const handleShare = async () => {
     if (!brand || !product) return;
@@ -114,8 +158,6 @@ export default function ProductDetailPage() {
     );
   }
 
-  const displayImage = product.images[activeImage] || product.images[0] || "";
-
   /* ---------- Contact links ---------- */
   const colourList = colors.map((c) => c.name).join(", ");
   const sizeList = product.sizes.join(", ");
@@ -131,6 +173,8 @@ export default function ProductDetailPage() {
   const emailHref = `mailto:${EMAIL}?subject=${encodeURIComponent(
     `Enquiry: ${brand.name} — ${product.name}`,
   )}&body=${encodeURIComponent(enquiryLine)}`;
+
+  const images = product.images ?? [];
 
   return (
     <div className="pb-8">
@@ -167,68 +211,110 @@ export default function ProductDetailPage() {
         {/* ---------- Main two-column card ---------- */}
         <section className="mt-3 bg-white shadow-sm">
           <div className="grid gap-0 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
-            {/* ============ LEFT — Product image only ============ */}
+            {/* ============ LEFT — Product image slider ============ */}
             <div className="lg:sticky lg:top-24 lg:self-start lg:border-r lg:border-[#F0F0F0]">
-              <div className="flex flex-col-reverse gap-3 p-4 sm:flex-row sm:gap-4 sm:p-5">
-                {/* Thumbnails — product images only */}
-                {product.images.length > 1 ? (
-                  <div className="flex gap-2 overflow-x-auto sm:flex-col sm:overflow-visible">
-                    {product.images.map((url, i) => {
-                      const selected = activeImage === i;
-                      return (
+              <div className="p-4 sm:p-5">
+                <div className="relative">
+                  {/* Slider viewport */}
+                  <div
+                    className="relative aspect-square overflow-hidden bg-white"
+                    onTouchStart={handleTouchStart}
+                    onTouchEnd={handleTouchEnd}
+                  >
+                    {images.length > 0 ? (
+                      <div
+                        className="flex h-full w-full transition-transform duration-300 ease-out"
+                        style={{
+                          transform: `translateX(-${activeImage * 100}%)`,
+                        }}
+                      >
+                        {images.map((url, i) => (
+                          <div
+                            key={`${url}-${i}`}
+                            className="h-full w-full shrink-0"
+                          >
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={url}
+                              alt={`${product.name} — view ${i + 1}`}
+                              className="h-full w-full object-contain"
+                              draggable={false}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center bg-[#F6F6F6] text-[12px] uppercase tracking-widest text-black/35">
+                        No image
+                      </div>
+                    )}
+
+                    {/* Prev / Next arrows */}
+                    {images.length > 1 ? (
+                      <>
                         <button
-                          key={`${url}-${i}`}
                           type="button"
-                          onMouseEnter={() => setActiveImage(i)}
-                          onClick={() => setActiveImage(i)}
-                          className={
-                            "h-14 w-14 shrink-0 overflow-hidden border-2 transition-all sm:h-16 sm:w-16 " +
-                            (selected
-                              ? "border-[#1845D6]"
-                              : "border-[#E5E5E5] hover:border-[#1845D6]/50")
-                          }
+                          onClick={goPrev}
+                          aria-label="Previous image"
+                          className="absolute left-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 shadow-md ring-1 ring-black/5 transition-colors hover:bg-[#F1F3F6] active:scale-95"
                         >
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={url}
-                            alt=""
-                            className="h-full w-full object-cover"
-                          />
+                          <ChevronLeft className="h-5 w-5 text-black/70" />
                         </button>
-                      );
-                    })}
-                  </div>
-                ) : null}
-
-                {/* Main product image */}
-                <div className="relative flex-1">
-                  <div className="relative aspect-square overflow-hidden bg-white">
-                    {displayImage ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={displayImage}
-                        alt={product.name}
-                        className="h-full w-full object-contain"
-                      />
+                        <button
+                          type="button"
+                          onClick={goNext}
+                          aria-label="Next image"
+                          className="absolute right-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 shadow-md ring-1 ring-black/5 transition-colors hover:bg-[#F1F3F6] active:scale-95"
+                        >
+                          <ChevronRight className="h-5 w-5 text-black/70" />
+                        </button>
+                      </>
                     ) : null}
-                  </div>
 
-                  {/* Share */}
-                  <div className="absolute right-2 top-2">
-                    <button
-                      type="button"
-                      onClick={() => void handleShare()}
-                      aria-label="Share"
-                      className="flex h-9 w-9 items-center justify-center rounded-full bg-white shadow-md transition-colors hover:bg-[#F1F3F6]"
-                    >
-                      <Share2 className="h-4 w-4 text-black/65" />
-                    </button>
-                    {copied ? (
-                      <span className="absolute right-full top-1/2 mr-2 -translate-y-1/2 whitespace-nowrap rounded bg-[#1A2340] px-2 py-1 text-[11px] font-medium text-white shadow-md">
-                        Link copied
+                    {/* Counter */}
+                    {images.length > 1 ? (
+                      <span className="absolute bottom-2 left-1/2 -translate-x-1/2 rounded-full bg-[#1A2340]/70 px-2.5 py-1 text-[11px] font-semibold text-white">
+                        {activeImage + 1} / {images.length}
                       </span>
                     ) : null}
+
+                    {/* Share */}
+                    <div className="absolute right-2 top-2 z-10">
+                      <button
+                        type="button"
+                        onClick={() => void handleShare()}
+                        aria-label="Share"
+                        className="flex h-9 w-9 items-center justify-center rounded-full bg-white shadow-md transition-colors hover:bg-[#F1F3F6]"
+                      >
+                        <Share2 className="h-4 w-4 text-black/65" />
+                      </button>
+                      {copied ? (
+                        <span className="absolute right-full top-1/2 mr-2 -translate-y-1/2 whitespace-nowrap rounded bg-[#1A2340] px-2 py-1 text-[11px] font-medium text-white shadow-md">
+                          Link copied
+                        </span>
+                      ) : null}
+                    </div>
                   </div>
+
+                  {/* Dots */}
+                  {images.length > 1 ? (
+                    <div className="mt-3 flex items-center justify-center gap-1.5">
+                      {images.map((url, i) => (
+                        <button
+                          key={`dot-${url}-${i}`}
+                          type="button"
+                          onClick={() => setActiveImage(i)}
+                          aria-label={`Go to image ${i + 1}`}
+                          className={
+                            "h-1.5 rounded-full transition-all " +
+                            (activeImage === i
+                              ? "w-5 bg-[#1845D6]"
+                              : "w-1.5 bg-black/20 hover:bg-black/40")
+                          }
+                        />
+                      ))}
+                    </div>
+                  ) : null}
                 </div>
               </div>
             </div>
@@ -285,6 +371,7 @@ export default function ProductDetailPage() {
                   </ul>
                 </div>
               ) : null}
+
               {/* ---------- Description section ---------- */}
               {product.description ? (
                 <section className="mt-3 bg-white shadow-sm">
@@ -295,8 +382,6 @@ export default function ProductDetailPage() {
                   </div>
                 </section>
               ) : null}
-
-            
 
               {/* ---------- WhatsApp + Call CTAs ---------- */}
               <div className="mt-5 grid grid-cols-2 gap-3">
@@ -356,21 +441,12 @@ export default function ProductDetailPage() {
             <div className="grid grid-cols-2 divide-x divide-y divide-[#F0F0F0] sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
               {colors.map((c) => (
                 <div key={c.id} className="flex flex-col p-4">
-                  {/* Colour image / swatch */}
+                  {/* Colour swatch only — no product images */}
                   <div className="relative aspect-square w-full overflow-hidden bg-[#F6F6F6]">
-                    {c.image ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={c.image}
-                        alt={c.name}
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      <span
-                        className="block h-full w-full"
-                        style={{ backgroundColor: c.code }}
-                      />
-                    )}
+                    <span
+                      className="block h-full w-full"
+                      style={{ backgroundColor: c.code }}
+                    />
                   </div>
 
                   {/* Colour name + code */}
