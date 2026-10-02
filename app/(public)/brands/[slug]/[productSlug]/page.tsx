@@ -211,11 +211,41 @@ export default function ProductDetailPage() {
         {/* ---------- Main two-column card ---------- */}
         <section className="mt-3 bg-white shadow-sm">
           <div className="grid gap-0 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
-            {/* ============ LEFT — Product image slider ============ */}
+            {/* ============ LEFT — Thumbnails + image slider ============ */}
             <div className="lg:sticky lg:top-24 lg:self-start lg:border-r lg:border-[#F0F0F0]">
-              <div className="p-4 sm:p-5">
-                <div className="relative">
-                  {/* Slider viewport */}
+              <div className="flex flex-col-reverse gap-3 p-4 sm:flex-row sm:gap-4 sm:p-5">
+                {/* Thumbnails — click/hover to change main image */}
+                {images.length > 1 ? (
+                  <div className="flex gap-2 overflow-x-auto sm:flex-col sm:overflow-visible">
+                    {images.map((url, i) => {
+                      const selected = activeImage === i;
+                      return (
+                        <button
+                          key={`${url}-${i}`}
+                          type="button"
+                          onMouseEnter={() => setActiveImage(i)}
+                          onClick={() => setActiveImage(i)}
+                          className={
+                            "h-14 w-14 shrink-0 overflow-hidden border-2 transition-all sm:h-16 sm:w-16 " +
+                            (selected
+                              ? "border-[#1845D6]"
+                              : "border-[#E5E5E5] hover:border-[#1845D6]/50")
+                          }
+                        >
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={url}
+                            alt=""
+                            className="h-full w-full object-cover"
+                          />
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : null}
+
+                {/* Main image slider */}
+                <div className="relative flex-1">
                   <div
                     className="relative aspect-square overflow-hidden bg-white"
                     onTouchStart={handleTouchStart}
@@ -441,12 +471,21 @@ export default function ProductDetailPage() {
             <div className="grid grid-cols-2 divide-x divide-y divide-[#F0F0F0] sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
               {colors.map((c) => (
                 <div key={c.id} className="flex flex-col p-4">
-                  {/* Colour swatch only — no product images */}
+                  {/* Colour image / swatch */}
                   <div className="relative aspect-square w-full overflow-hidden bg-[#F6F6F6]">
-                    <span
-                      className="block h-full w-full"
-                      style={{ backgroundColor: c.code }}
-                    />
+                    {c.image ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={c.image}
+                        alt={c.name}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <span
+                        className="block h-full w-full"
+                        style={{ backgroundColor: c.code }}
+                      />
+                    )}
                   </div>
 
                   {/* Colour name + code */}
