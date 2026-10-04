@@ -88,7 +88,7 @@ export interface BrandInput {
   slug: string;
   description: string;
   categoryId: string;
-  mainImage: string; // 👈 added
+  mainImage?: string; // ✅ optional
   bannerImages: string[];
 }
 

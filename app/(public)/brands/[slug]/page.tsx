@@ -28,10 +28,8 @@ export default function BrandDetailPage() {
 
     // "Pehle dala wala pehle" -> createdAt ascending (oldest first)
     return [...list].sort((a, b) => {
-      const aT =
-        a.createdAt?.toMillis?.() ?? new Date(a.createdAt ?? 0).getTime();
-      const bT =
-        b.createdAt?.toMillis?.() ?? new Date(b.createdAt ?? 0).getTime();
+      const aT = a.createdAt instanceof Date ? a.createdAt.getTime() : 0;
+      const bT = b.createdAt instanceof Date ? b.createdAt.getTime() : 0;
       return aT - bT;
     });
   }, [productsState.data, brand?.id]);
