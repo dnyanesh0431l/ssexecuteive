@@ -14,7 +14,8 @@ import type { Banner } from "../lib/types";
 const FALLBACK_BANNERS: Banner[] = [
   {
     id: "f1",
-    image: "https://i.pinimg.com/1200x/ad/89/12/ad891271ccf1262ac153bab88ca68c57.jpg",
+    image:
+      "https://i.pinimg.com/1200x/ad/89/12/ad891271ccf1262ac153bab88ca68c57.jpg",
     title: "SS Executive Offer's",
     subtitle: "",
     link: "",
@@ -251,33 +252,39 @@ export default function HomePage() {
 
                 {/* Brand grid — flat white tiles on the tinted section */}
                 <div className="grid grid-cols-2 gap-3 p-3 sm:grid-cols-3 sm:gap-4 sm:p-4 md:grid-cols-4 lg:grid-cols-5">
-                  {brands.map((brand) => (
-                    <Link
-                      key={brand.id}
-                      href={`/brands/${brand.slug}`}
-                      className="group flex flex-col overflow-hidden bg-white shadow-sm transition-shadow hover:shadow-md"
-                    >
-                      <div className="flex aspect-square w-full items-center justify-center overflow-hidden">
-                        {brand.bannerImages[0] ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            src={brand.bannerImages[0]}
-                            alt={brand.name}
-                            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                          />
-                        ) : null}
-                      </div>
-                      <div className="px-3 py-3 text-center">
-                        <p className="line-clamp-2 text-[14px] font-bold text-[#1A2340] group-hover:text-[#1845D6] sm:text-[15px]">
-                          {brand.name}
-                        </p>
-                        <p className="mt-1 text-[11px] font-semibold text-[#388E3C]">
-                          {brand.productCount}{" "}
-                          {brand.productCount === 1 ? "Product" : "Products"}
-                        </p>
-                      </div>
-                    </Link>
-                  ))}
+                  {brands.map((brand) => {
+                    // Prefer the brand's main image; fall back to the first banner image
+                    const cover =
+                      brand.mainImage || brand.bannerImages[0] || "";
+
+                    return (
+                      <Link
+                        key={brand.id}
+                        href={`/brands/${brand.slug}`}
+                        className="group flex flex-col overflow-hidden bg-white shadow-sm transition-shadow hover:shadow-md"
+                      >
+                        <div className="flex aspect-square w-full items-center justify-center overflow-hidden">
+                          {cover ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={cover}
+                              alt={brand.name}
+                              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                            />
+                          ) : null}
+                        </div>
+                        <div className="px-3 py-3 text-center">
+                          <p className="line-clamp-2 text-[14px] font-bold text-[#1A2340] group-hover:text-[#1845D6] sm:text-[15px]">
+                            {brand.name}
+                          </p>
+                          <p className="mt-1 text-[11px] font-semibold text-[#388E3C]">
+                            {brand.productCount}{" "}
+                            {brand.productCount === 1 ? "Product" : "Products"}
+                          </p>
+                        </div>
+                      </Link>
+                    );
+                  })}
                 </div>
               </section>
             );
