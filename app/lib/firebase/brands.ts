@@ -46,6 +46,7 @@ function mapBrand(id: string, data: DocumentData): Brand {
     slug: data.slug ?? "",
     description: data.description ?? "",
     categoryId: data.categoryId ?? "",
+    mainImage: typeof data.mainImage === "string" ? data.mainImage : "", // 👈 added
     bannerImages: asStringArray(data.bannerImages),
     productCount: typeof data.productCount === "number" ? data.productCount : 0,
     createdAt: toDate(data.createdAt),
@@ -87,6 +88,7 @@ export interface BrandInput {
   slug: string;
   description: string;
   categoryId: string;
+  mainImage: string; // 👈 added
   bannerImages: string[];
 }
 
@@ -109,6 +111,16 @@ export async function updateBrand(
   const prevCategory = before.exists()
     ? ((before.data().categoryId as string) ?? "")
     : "";
+
+  // If mainImage changed, best-effort delete the old one
+  if (
+    before.exists() &&
+    typeof input.mainImage === "string" &&
+    input.mainImage !== before.data().mainImage
+  ) {
+    const oldUrl = before.data().mainImage as string | undefined;
+    if (oldUrl) await deleteImageByUrl(oldUrl);
+  }
 
   await updateDoc(doc(db, "brands", brandId), {
     ...input,
@@ -141,6 +153,9 @@ export async function deleteBrand(brandId: string): Promise<void> {
   let prevCategory = "";
   if (snap.exists()) {
     const data = snap.data();
+    if (typeof data.mainImage === "string" && data.mainImage) {
+      imageUrls.push(data.mainImage); // 👈 added
+    }
     if (Array.isArray(data.bannerImages)) {
       data.bannerImages.forEach((img: unknown) => {
         if (typeof img === "string" && img) imageUrls.push(img);

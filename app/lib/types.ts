@@ -19,6 +19,7 @@ export interface Brand {
   slug: string;
   description: string;
   categoryId: string;
+  mainImage: string; // 👈 added
   bannerImages: string[];
   productCount: number;
   createdAt: Date | null;
