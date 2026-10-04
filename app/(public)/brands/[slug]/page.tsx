@@ -23,10 +23,18 @@ export default function BrandDetailPage() {
     [brandsState.data, slug],
   );
 
-  const products = useMemo(
-    () => productsState.data.filter((p) => p.brandId === brand?.id),
-    [productsState.data, brand?.id],
-  );
+  const products = useMemo(() => {
+    const list = productsState.data.filter((p) => p.brandId === brand?.id);
+
+    // "Pehle dala wala pehle" -> createdAt ascending (oldest first)
+    return [...list].sort((a, b) => {
+      const aT =
+        a.createdAt?.toMillis?.() ?? new Date(a.createdAt ?? 0).getTime();
+      const bT =
+        b.createdAt?.toMillis?.() ?? new Date(b.createdAt ?? 0).getTime();
+      return aT - bT;
+    });
+  }, [productsState.data, brand?.id]);
 
   const category = useMemo(
     () => categoriesState.data.find((c) => c.id === brand?.categoryId),
